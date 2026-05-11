@@ -212,23 +212,26 @@
         .chart-circle.done::after { background: var(--accent); color: #fff; }
         .chart-circle:hover::after { background: #e9f5ef; color: var(--accent); }
 
-        /* ── 모바일 반응형 ─────────────────────────────────────────── */
+        /* ── 모바일 반응형 (전면 재작성) ──────────────────────────── */
         @media (max-width: 600px) {
             :root {
-                --font-size-text: 1.25rem;
+                --font-size-text: 1.15rem;
                 --padding-val: 12px;
             }
+
+            /* ── 기본 레이아웃 ── */
             body {
                 padding: 0;
                 align-items: flex-start;
                 background-color: var(--paper-white);
             }
             .container {
-                padding: 14px 14px 80px;
+                padding: 14px 14px calc(env(safe-area-inset-bottom, 0px) + 80px);
                 border-radius: 0;
                 border: none;
                 box-shadow: none;
                 min-height: 100vh;
+                min-height: -webkit-fill-available;
             }
             .header {
                 padding-bottom: 10px;
@@ -236,105 +239,222 @@
             }
             .title { font-size: 1.2rem; }
 
-            /* 설정 바 */
+            /* ── 설정 바 ── */
             .settings-bar {
                 flex-wrap: wrap;
-                gap: 8px;
+                gap: 6px;
                 padding: 8px 10px;
-                font-size: 0.78rem;
-                overflow-x: auto;
+                font-size: 0.82rem;
             }
             .settings-group { flex-shrink: 0; }
             .settings-bar .btn-action,
             .settings-bar .btn-resume {
-                height: 36px;
-                font-size: 0.82rem;
-                padding: 0 12px;
+                height: 40px;
+                font-size: 0.84rem;
+                padding: 0 14px;
             }
-            .settings-bar .nav-select { height: 36px; font-size: 0.82rem; }
+            .settings-bar .nav-select { height: 40px; font-size: 0.84rem; }
 
-            /* 파일 업로드 */
-            .file-upload-container { padding: 28px 16px; }
+            /* ── 파일 업로드 ── */
+            .file-upload-container { padding: 30px 16px; }
 
-            /* 내비 바 */
+            /* ── 내비 바 ── */
             .nav-bar { gap: 6px; }
-            .nav-bar .nav-select { flex: 1; font-size: 0.9rem; height: 40px; }
-            .btn-nav { height: 40px; font-size: 0.9rem; padding: 0 14px; }
+            .nav-bar .nav-select { flex: 1; font-size: 0.92rem; height: 44px; }
+            .btn-nav { height: 44px; font-size: 0.92rem; padding: 0 16px; }
 
-            /* 모드 선택 */
+            /* ── 버튼 기본 터치 크기 ── */
+            .btn-action, .btn-apply {
+                min-height: 40px;
+            }
+
+            /* ── 모드 선택 ── */
             .mode-select {
                 flex-wrap: wrap;
                 gap: 8px;
-                font-size: 0.85rem;
+                font-size: 0.86rem;
             }
+            .mode-select label { padding: 4px 0; }
             .mode-select #free-tools {
                 width: 100%;
                 margin-left: 0;
                 justify-content: flex-end;
             }
             .mode-select .btn-apply,
-            .mode-select .btn-action { height: 38px; font-size: 0.82rem; }
+            .mode-select .btn-action { height: 40px; font-size: 0.86rem; }
 
-            /* 본문 박스 */
+            /* ── 본문/입력 박스 ── */
             .text-common {
                 height: auto;
-                min-height: 100px;
-                max-height: 200px;
+                min-height: 110px;
+                max-height: 210px;
             }
             #user-input[contenteditable] {
-                min-height: 120px;
-                max-height: 220px;
+                min-height: 130px;
+                max-height: 240px;
             }
 
-            /* 날짜 행 - 가로 스크롤 */
+            /* ── 날짜 행 - 가로 스크롤 + 더 큰 터치 ── */
             .date-row {
                 overflow-x: auto;
+                overflow-y: hidden;
                 flex-wrap: nowrap;
                 -webkit-overflow-scrolling: touch;
-                gap: 4px;
-                padding: 5px 10px;
+                scrollbar-width: none;
+                gap: 5px;
+                padding: 6px 10px;
             }
-            .date-pos-btn { white-space: nowrap; height: 30px; }
+            .date-row::-webkit-scrollbar { display: none; }
+            .date-pos-btn {
+                white-space: nowrap;
+                height: 34px;
+                font-size: 0.78rem;
+                padding: 0 10px;
+                flex-shrink: 0;
+            }
+            #date-display { font-size: 0.82rem; flex-shrink: 0; }
 
-            /* 툴바 - 터치 영역 확대 */
-            .fmt-toolbar { padding: 6px 8px; gap: 4px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            /* ── 서식 툴바 - 가로 스크롤 + 큰 터치 ── */
+            .fmt-toolbar {
+                padding: 6px 8px;
+                gap: 3px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .fmt-toolbar::-webkit-scrollbar { display: none; }
             .fmt-left { flex-wrap: nowrap; }
-            .fmt-btn { width: 40px; height: 40px; font-size: 0.95rem; flex-shrink: 0; }
-            .fmt-tag-btn { width: auto; padding: 0 10px; }
+            .fmt-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+                flex-shrink: 0;
+                border-radius: 8px;
+            }
+            .fmt-tag-btn { width: auto; padding: 0 12px; }
+            .fmt-clear-btn { width: auto; padding: 0 10px; height: 44px; }
+            .fmt-divider { height: 24px; }
 
-            /* 특수문자 팝업 - 전체 너비 */
+            /* ── 특수문자 팝업 → 하단 시트 (fixed) ── */
             .special-picker-pop {
-                width: calc(100vw - 28px);
-                left: 0;
-                right: 0;
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                top: auto !important;
+                width: 100% !important;
+                border-radius: 14px 14px 0 0;
+                border-bottom: none;
+                z-index: 9999 !important;
+                box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+                padding-bottom: env(safe-area-inset-bottom, 0px);
             }
-            .sp-body { height: 260px; }
+            .sp-tabs { padding: 10px 12px 0; }
+            .sp-tab { font-size: 0.78rem; padding: 6px 0; }
+            .sp-body { height: 240px; padding: 10px; }
 
-            /* 태그 팝업 */
+            /* ── 태그 팝업 → 하단 시트 (fixed) ── */
             .tag-popup {
-                width: calc(100vw - 56px);
-                left: 0;
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                top: auto !important;
+                width: 100% !important;
+                border-radius: 14px 14px 0 0;
+                border-bottom: none;
+                z-index: 9999 !important;
+                box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+                padding: 18px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+            }
+            .saved-tag-chip { padding: 8px 16px; font-size: 0.95rem; }
+
+            /* ── 색상 팝업 ── */
+            .color-picker-pop {
+                left: auto;
+                right: 0;
+                transform: none;
+                bottom: 42px;
+            }
+            .c-swatch { width: 26px; height: 26px; }
+
+            /* ── 읽기표 / 책 네비 ── */
+            /* 각 행을 가로 스크롤 가능하게 (nowrap 유지, 하지만 스크롤 허용) */
+            .book-nav-row {
+                gap: 4px;
+                margin-bottom: 6px;
+                overflow: visible;
+            }
+            .book-nav-chips-justify {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                flex-wrap: nowrap;
+                gap: 3px;
+                padding-bottom: 2px;
+            }
+            .book-nav-chips-justify::-webkit-scrollbar { display: none; }
+            .book-nav-chip {
+                width: 34px;
+                flex-shrink: 0;
+                font-size: 0.64rem;
+                padding: 5px 0;
+                height: 28px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .book-cat-label {
+                font-size: 0.68rem;
+                min-width: 34px;
+                flex-shrink: 0;
             }
 
-            /* 색상 팝업 */
-            .color-picker-pop { left: auto; right: 0; transform: none; }
+            /* ── 챕터 원 ── */
+            .chart-circle {
+                width: 32px;
+                height: 32px;
+            }
+            .chart-circle::after {
+                width: 24px;
+                height: 24px;
+                font-size: 0.64rem;
+                line-height: 24px;
+            }
+            .chart-circles { gap: 5px; }
+            .chart-book-name { font-size: 0.9rem; }
 
-            /* 진행표 */
-            .book-nav-chip { width: 32px; font-size: 0.62rem; }
-            .chart-circle { width: 30px; height: 30px; }
-            .chart-circle::after { width: 22px; height: 22px; font-size: 0.62rem; line-height: 22px; }
+            /* ── 우측 플로팅 네비 (읽기표) ── */
+            .chart-float-nav {
+                position: fixed;
+                right: 10px;
+                bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+                top: auto;
+                z-index: 100;
+            }
+            .chart-float-btn { width: 38px; height: 38px; }
 
-            /* 각주 */
-            #footnote-input { font-size: calc(var(--font-size-text) * 0.7); }
-
-            /* 버튼들 기본 터치 크기 */
-            .btn-action, .btn-nav, .btn-apply {
-                min-height: 38px;
+            /* ── 각주 ── */
+            #footnote-input {
+                font-size: calc(var(--font-size-text) * 0.72);
+                min-height: 60px;
             }
 
-            /* 자유입력 모드 선택 행 */
+            /* ── 각주 높이 조절 핸들 ── */
+            .fn-sz-btn { font-size: 1rem; padding: 0 12px; }
+
+            /* ── 자유입력 모드 선택 행 ── */
             #mode-select-freewrite { flex-wrap: wrap; gap: 8px; }
             #mode-select-freewrite > div { margin-left: 0 !important; }
+
+            /* ── 헤더 홈/차트 버튼 ── */
+            .btn-home, .btn-chart { width: 38px; height: 38px; }
+
+            /* ── 진행률 요약 ── */
+            .progress-chip { font-size: 0.8rem; }
+            .progress-expand-btn { font-size: 0.78rem; }
         }
     </style>
 </head>
@@ -343,7 +463,7 @@
 <div class="container">
     <div class="header">
         <div style="display:flex; align-items:baseline; gap:8px;">
-            <h1 class="title" id="verse-title">My Bible</h1>
+            <h1 class="title" id="verse-title">JINs Bible</h1>
             <span id="header-mode-label" style="font-size:0.75rem; color:#aaa; font-weight:400; display:none;"></span>
         </div>
         <div style="display:flex; align-items:center; gap:2px;">
@@ -1616,7 +1736,7 @@ const SPECIAL_CATEGORIES = [
         document.getElementById('drop-zone').style.display = 'block';
         document.getElementById('freewrite-box').style.display = 'block';
         document.getElementById('btn-chart').style.display = 'none';
-        document.getElementById('verse-title').innerText = 'My Bible';
+        document.getElementById('verse-title').innerText = 'JINs Bible';
         const lbl2 = document.getElementById('header-mode-label'); if(lbl2){ lbl2.textContent=''; lbl2.style.display='none'; }
         document.getElementById('user-input').innerHTML = '';
         document.getElementById('user-input').setAttribute('data-placeholder', '위와 동일하게 입력 시 다음 절로 자동 이동됩니다.');
@@ -2122,7 +2242,7 @@ const SPECIAL_CATEGORIES = [
             });
             if (btnHome)    btnHome.style.display    = 'none';
             if (btnToInput) btnToInput.style.display = 'inline-flex';
-            if (title) { title.dataset.prev = title.innerText; title.innerText = 'My BIBLE 진행표'; }
+            if (title) { title.dataset.prev = title.innerText; title.innerText = 'JINs Bible 진행표'; }
         } else {
             chartView.style.display = 'none';
             chartView.style.height = '';
@@ -2252,6 +2372,71 @@ const SPECIAL_CATEGORIES = [
                 .catch(e => console.log('SW 실패:', e));
         });
     }
+    </script>
+
+    <!-- 모바일 딤 오버레이 (하단 시트 배경) -->
+    <div id="mobile-dim" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:9998;" onclick="closeMobilePopups()"></div>
+    <script>
+    (function() {
+        var isMobile = function() { return window.innerWidth <= 600; };
+
+        function showDim() { if (!isMobile()) return; document.getElementById('mobile-dim').style.display = 'block'; }
+        function hideDim() { document.getElementById('mobile-dim').style.display = 'none'; }
+
+        window.closeMobilePopups = function() {
+            ['special-picker-pop','tag-popup','color-picker-pop'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            hideDim();
+        };
+
+        // toggleSpecialPicker 래핑
+        window.addEventListener('DOMContentLoaded', function() {
+            var _os = window.toggleSpecialPicker;
+            window.toggleSpecialPicker = function() {
+                _os && _os();
+                var pop = document.getElementById('special-picker-pop');
+                if (pop && pop.style.display !== 'none') showDim(); else hideDim();
+            };
+
+            var _ot = window.toggleTagPopup;
+            window.toggleTagPopup = function() {
+                _ot && _ot();
+                var pop = document.getElementById('tag-popup');
+                if (pop && pop.style.display !== 'none') showDim(); else hideDim();
+            };
+
+            var _oc = window.toggleColorPicker;
+            window.toggleColorPicker = function() {
+                _oc && _oc();
+                var pop = document.getElementById('color-picker-pop');
+                if (isMobile() && pop && pop.style.display !== 'none') showDim(); else hideDim();
+            };
+
+            // 하단 시트 스와이프 다운으로 닫기
+            ['special-picker-pop','tag-popup'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                var startY = 0;
+                el.addEventListener('touchstart', function(e) { startY = e.touches[0].clientY; }, { passive: true });
+                el.addEventListener('touchend', function(e) {
+                    if (e.changedTouches[0].clientY - startY > 60) { el.style.display = 'none'; hideDim(); }
+                }, { passive: true });
+            });
+
+            // iOS 키보드 올라올 때 입력창 스크롤
+            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                ['user-input','footnote-input'].forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    el.addEventListener('focus', function() {
+                        setTimeout(function() { el.scrollIntoView({ behavior:'smooth', block:'center' }); }, 350);
+                    });
+                });
+            }
+        });
+    })();
     </script>
 </body>
 </html>
