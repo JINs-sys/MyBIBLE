@@ -1,7 +1,7 @@
 {
   "name": "JINs Bible",
   "short_name": "JINs Bible",
-  "description": "나만의 성경 필사 앱",
+  "description": "나만의 성경 필사 / 주석 제작",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f6f2e9",
