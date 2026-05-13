@@ -184,6 +184,14 @@
         .c-swatch.sel { border-color:var(--ink); }
 
         .special-picker-pop { position:absolute; bottom:40px; left:0; background:#ffffff; border:1px solid rgba(217,210,193,0.7); border-radius:8px; padding:0; width:535px; z-index:2147483647; box-shadow:0 8px 32px rgba(0,0,0,0.16); overflow:visible; }
+        /* 드래그 핸들 */
+        .sp-drag-handle { display:flex; justify-content:center; align-items:center; padding:7px 8px 5px; cursor:grab; touch-action:none; background:#faf9f6; border-radius:8px 8px 0 0; border-bottom:1px solid rgba(217,210,193,0.4); user-select:none; position:relative; }
+        .sp-drag-handle:active { cursor:grabbing; }
+        .sp-drag-pill { width:32px; height:3px; border-radius:2px; background:#ccc; pointer-events:none; flex:1; }
+        .sp-close-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:none; font-size:0.85rem; color:#aaa; cursor:pointer; padding:2px 6px; border-radius:4px; line-height:1; transition:background 0.12s, color 0.12s; }
+        .sp-close-btn:hover { background:#f0ece3; color:#666; }
+        /* 드래그 후 플로팅 상태 */
+        .special-picker-pop.sp-floating { border-radius:10px !important; box-shadow:0 10px 36px rgba(0,0,0,0.22) !important; }
         .sp-tabs { display:flex; flex-wrap:wrap; gap:0; border-bottom:1px solid rgba(217,210,193,0.6); padding:8px 10px 0; background:#faf9f6; border-radius:8px 8px 0 0; }
         .sp-tab { font-size:0.72rem; padding:4px 0; border:1px solid transparent; border-radius:4px 4px 0 0; cursor:pointer; color:var(--ink-soft); background:none; font-family:var(--font-main); margin-bottom:-1px; white-space:nowrap; flex:1; text-align:center; }
         .sp-tab.active { background:#ffffff; border-color:rgba(217,210,193,0.7); border-bottom-color:#ffffff; color:var(--accent); font-weight:600; }
@@ -1081,6 +1089,10 @@
                     <div class="fmt-color-wrap" id="fmt-special-wrap">
                         <button class="fmt-btn" id="fmt-special-btn" onmousedown="event.preventDefault(); toggleSpecialPicker();" title="특수문자 삽입">특수</button>
                         <div class="special-picker-pop" id="special-picker-pop" style="display:none;">
+                            <div class="sp-drag-handle" id="sp-drag-handle">
+                                <div class="sp-drag-pill"></div>
+                                <button class="sp-close-btn" onmousedown="event.preventDefault();" onclick="document.getElementById('special-picker-pop').style.display='none';" title="닫기">✕</button>
+                            </div>
                             <div class="sp-tabs" id="sp-tabs"></div>
                             <div class="sp-body">
                                 <div style="font-size:0.68rem;color:#bbb;margin-bottom:8px;">한 번 탭 (PC: 클릭)으로 삽입</div>
@@ -1272,7 +1284,7 @@
         </div>
     </div>
 
-    <div style="text-align:right; font-size:0.72rem; color:#ccc; margin-top:18px; padding-top:10px; border-top:1px solid var(--rule); position:relative; z-index:10000;">
+    <div id="ver-footer" style="text-align:right; font-size:0.72rem; color:#ccc; margin-top:18px; padding-top:10px; border-top:1px solid var(--rule); position:relative; z-index:1;">
         <span id="ver-tag" style="cursor:default; user-select:none;">JINs Bible 2026 Web | v4.2.1</span>
     </div>
 
@@ -1314,6 +1326,7 @@
         function openEaster() {
             const overlay = document.getElementById('easter-overlay');
             overlay.style.display = 'block';
+            document.getElementById('ver-footer').style.zIndex = '10000';
             // 별 canvas
             const canvas = document.getElementById('easter-canvas');
             const ctx = canvas.getContext('2d');
@@ -1357,7 +1370,12 @@
             if (overlay._stopAnim) overlay._stopAnim();
             overlay.style.opacity = '0';
             overlay.style.transition = 'opacity 0.5s';
-            setTimeout(() => { overlay.style.display = 'none'; overlay.style.opacity = ''; overlay.style.transition = ''; }, 500);
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.style.opacity = '';
+                overlay.style.transition = '';
+                document.getElementById('ver-footer').style.zIndex = '1';
+            }, 500);
         };
     })();
     </script>
@@ -1672,17 +1690,6 @@ const SPECIAL_CATEGORIES = [
             renderSpecialGrid();
         }
     }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        document.addEventListener('mousedown', e => {
-            const sw = document.getElementById('fmt-special-wrap');
-            const pop = document.getElementById('special-picker-pop');
-            // 팝업 내부 또는 버튼 클릭이면 닫지 않음
-            if (pop && sw && !sw.contains(e.target) && !pop.contains(e.target)) {
-                pop.style.display = 'none';
-            }
-        });
-    });
 
     window.addEventListener('DOMContentLoaded', () => {
         const pop = document.getElementById('color-picker-pop');
@@ -3411,11 +3418,34 @@ const SPECIAL_CATEGORIES = [
     function comInsertSpecial(ch) {
         const ed = document.getElementById('com-content');
         if (!ed) return;
-        // 저장된 커서 위치 복원 후 삽입 (focus 없이 — 키보드 안 올라오게)
-        if (comSavedSel) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(comSavedSel); }
-        document.execCommand('insertText', false, ch);
-        const s = window.getSelection();
-        if (s?.rangeCount) comSavedSel = s.getRangeAt(0).cloneRange();
+
+        // 에디터 포커스 (키보드 방지 위해 preventScroll)
+        ed.focus({ preventScroll: true });
+
+        // 저장된 커서 위치 복원
+        const sel = window.getSelection();
+        if (comSavedSel && ed.contains(comSavedSel.commonAncestorContainer)) {
+            sel.removeAllRanges();
+            sel.addRange(comSavedSel);
+        } else if (!sel.rangeCount || !ed.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+            // 저장된 커서 없으면 에디터 끝에 삽입
+            const r = document.createRange();
+            r.selectNodeContents(ed);
+            r.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(r);
+        }
+
+        // Range API로 직접 삽입
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        const node = document.createTextNode(ch);
+        range.insertNode(node);
+        range.setStartAfter(node);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        comSavedSel = range.cloneRange();
     }
 
     // 한 번 터치로 입력 (키보드 올라오지 않게 e.preventDefault 유지)
@@ -4193,9 +4223,14 @@ const SPECIAL_CATEGORIES = [
     function syncComTypeBarWidth() {
         const navBar  = document.getElementById('com-nav-bar');
         const typeBar = document.getElementById('com-type-bar');
+        const tabRow  = document.getElementById('com-tab-row');
         if (!navBar || !typeBar) return;
-        const w = navBar.offsetWidth;
-        if (w > 0) typeBar.style.width = w + 'px';
+        const navW = navBar.offsetWidth;
+        if (navW <= 0) return;
+        // 제목 박스 최소 너비(180px) + gap(8px) 를 항상 확보
+        const rowW   = tabRow ? tabRow.offsetWidth : window.innerWidth;
+        const maxW   = Math.max(80, rowW - 188);
+        typeBar.style.width = Math.min(navW, maxW) + 'px';
     }
     window.addEventListener('resize', syncComTypeBarWidth);
 
@@ -4792,6 +4827,10 @@ const SPECIAL_CATEGORIES = [
     </script>
     <!-- 주석 특수문자 팝업 (body 레벨 — overflow 클리핑 방지) -->
     <div class="special-picker-pop" id="com-special-picker-pop" style="display:none; position:fixed; z-index:2147483647;">
+        <div class="sp-drag-handle" id="com-sp-drag-handle">
+            <div class="sp-drag-pill"></div>
+            <button class="sp-close-btn" onmousedown="event.preventDefault();" onclick="document.getElementById('com-special-picker-pop').style.display='none';" title="닫기">✕</button>
+        </div>
         <div class="sp-tabs" id="com-sp-tabs"></div>
         <div class="sp-body">
             <div style="font-size:0.68rem;color:#bbb;margin-bottom:8px;">한 번 탭 (PC: 클릭)으로 삽입</div>
@@ -4807,5 +4846,49 @@ const SPECIAL_CATEGORIES = [
             <div id="com-special-custom-grid" class="special-grid" style="margin-top:8px;"></div>
         </div>
     </div>
+    <!-- ── 특수문자 팝업 드래그 이동 ── -->
+    <script>
+    (function () {
+        function makeDraggable(handleId, popId) {
+            const handle = document.getElementById(handleId);
+            const pop    = document.getElementById(popId);
+            if (!handle || !pop) return;
+
+            let active = false, ox, oy, pl, pt;
+
+            function start(cx, cy) {
+                active = true;
+                ox = cx; oy = cy;
+                pl = parseInt(pop.style.left) || 0;
+                pt = parseInt(pop.style.top)  || 0;
+                pop.style.transition = 'none';
+                handle.style.cursor  = 'grabbing';
+            }
+            function move(cx, cy) {
+                if (!active) return;
+                const maxL = window.innerWidth  - pop.offsetWidth;
+                const maxT = window.innerHeight - pop.offsetHeight;
+                pop.style.left = Math.max(0, Math.min(maxL, pl + cx - ox)) + 'px';
+                pop.style.top  = Math.max(0, Math.min(maxT, pt + cy - oy)) + 'px';
+                pop.style.bottom = 'auto';
+                pop.style.right  = 'auto';
+            }
+            function end() { active = false; handle.style.cursor = 'grab'; }
+
+            handle.addEventListener('mousedown',  e => { e.preventDefault(); start(e.clientX, e.clientY); });
+            document.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+            document.addEventListener('mouseup',   end);
+
+            handle.addEventListener('touchstart', e => { e.preventDefault(); const t = e.touches[0]; start(t.clientX, t.clientY); }, { passive: false });
+            document.addEventListener('touchmove', e => { if (!active) return; e.preventDefault(); const t = e.touches[0]; move(t.clientX, t.clientY); }, { passive: false });
+            document.addEventListener('touchend',  end);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            makeDraggable('sp-drag-handle',     'special-picker-pop');
+            makeDraggable('com-sp-drag-handle', 'com-special-picker-pop');
+        });
+    })();
+    </script>
 </body>
 </html>
