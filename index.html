@@ -111,6 +111,9 @@
         .btn-action:hover { background: #f0ece3; border-color: #b0a898; color: var(--ink); }
         .btn-apply { background: var(--accent); color: #fff; border: 1px solid var(--accent); cursor: pointer; padding: 0 14px; height: 30px; border-radius: 4px; font-size: 0.82rem; font-family: var(--font-main); transition: background 0.12s; white-space: nowrap; }
         .btn-apply:hover { background: #1e3329; border-color: #1e3329; }
+        /* 주석 내보내기 전용 — 모바일 min-height 룰 영향 없이 고정 높이 */
+        .com-export-btn { background: var(--accent); color: #fff; border: 1px solid var(--accent); cursor: pointer; padding: 0 12px; height: 28px; min-height: 28px; max-height: 28px; border-radius: 4px; font-size: 0.8rem; font-family: var(--font-main); transition: background 0.12s; white-space: nowrap; flex-shrink: 0; align-self: center; }
+        .com-export-btn:hover { background: #1e3329; border-color: #1e3329; }
         .btn-nav { background: none; border: 1px solid var(--rule); cursor: pointer; padding: 0 12px; height: 30px; border-radius: 4px; font-size: 0.82rem; color: var(--ink-soft); font-family: var(--font-main); transition: background 0.12s, border-color 0.12s, color 0.12s; white-space: nowrap; }
         .btn-nav:hover { background: #f0ece3; border-color: #b0a898; color: var(--ink); }
 
@@ -249,7 +252,7 @@
         .com-refer-inline {
             display: flex; align-items: center; gap: 6px;
             padding: 0 12px; border: 1px solid var(--rule); border-radius: 6px;
-            background: #faf9f6; flex: 1 1 auto; min-width: 0;
+            background: #faf9f6; flex: 1 1 180px; min-width: 180px;
         }
         .com-refer-inline label { font-size: 0.68rem; color: #bbb; white-space: nowrap; flex-shrink: 0; }
         .com-refer-inline #com-refer {
@@ -1081,7 +1084,7 @@
                     <option value="aab">AAB</option>
                     <option value="txt">TXT</option>
                 </select>
-                <button class="btn-apply" onclick="exportCommentary()" style="height:28px; padding:0 12px; font-size:0.8rem; flex-shrink:0; align-self:center;">↓ 내보내기</button>
+                <button class="com-export-btn" onclick="exportCommentary()">↓ 내보내기</button>
             </div>
         </div>
 
@@ -1095,7 +1098,7 @@
             </div>
 
             <!-- 주석 유형 탭 + 제목 입력 (가로 배치) -->
-            <div id="com-tab-row" style="display:flex; align-items:stretch; gap:8px; margin-bottom:12px; width:100%;">
+            <div id="com-tab-row" style="display:flex; align-items:stretch; gap:8px; margin-bottom:12px; width:100%; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none;">
                 <!-- 탭 3개: 너비 = 이동 버튼 끝까지 (JS로 동기화) -->
                 <div class="com-type-bar" id="com-type-bar" style="margin-bottom:0; flex-shrink:0;">
                     <button class="com-type-btn"         id="com-type-intro"   onclick="setComType('intro')"><span class="com-type-key">책</span> 개론</button>
@@ -1218,7 +1221,7 @@
     </div>
 
     <div style="text-align:right; font-size:0.72rem; color:#ccc; margin-top:18px; padding-top:10px; border-top:1px solid var(--rule); position:relative; z-index:10000;">
-        <span id="ver-tag" style="cursor:default; user-select:none;">JINs Bible 2026 Web | v4.2.0</span>
+        <span id="ver-tag" style="cursor:default; user-select:none;">JINs Bible 2026 Web | v4.2.2</span>
     </div>
 
     <!-- 이스터에그 오버레이 -->
@@ -3482,6 +3485,14 @@ const SPECIAL_CATEGORIES = [
         document.getElementById('btn-home').style.display         = 'none';
         // 드롭존 바인딩 (UI 표시 후)
         setTimeout(initRefDropZone, 0);
+        // 모바일: 주석 네비바 크기 축소 (CSS specificity 우회)
+        if (window.innerWidth <= 600) {
+            document.querySelectorAll('#com-nav-bar .nav-select').forEach(el => {
+                el.style.height = '36px'; el.style.fontSize = '0.84rem'; el.style.flex = 'none';
+            });
+            const navBtn = document.querySelector('#com-nav-bar .btn-nav');
+            if (navBtn) { navBtn.style.height = '36px'; navBtn.style.padding = '0 10px'; navBtn.style.fontSize = '0.84rem'; }
+        }
         // com-type-bar 너비를 nav-bar(이동 버튼 끝)에 맞춤
         setTimeout(syncComTypeBarWidth, 0);
         // 이미 로드된 파일이 있으면 슬롯 동기화
