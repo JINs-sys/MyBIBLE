@@ -159,7 +159,9 @@
         #com-nav-bar.nav-bar     { align-items: center; }
 
         /* contenteditable 입력창 */
-        #user-input[contenteditable] { display: block; border: none; outline: none; color: var(--ink); background-color: #ffffff; width: 100%; padding: var(--padding-val); min-height: 140px; max-height: 200px; overflow-y: auto; font-family: var(--font-main); font-size: var(--font-size-text); line-height: var(--line-height-text); word-break: break-all; white-space: pre-wrap; }
+        #user-input[contenteditable] { display: block; border: none; outline: none; color: var(--ink); background-color: #ffffff; width: 100%; padding: var(--padding-val); min-height: 140px; max-height: 200px; overflow-y: auto; font-family: var(--font-main); font-size: calc(var(--font-size-text) * 0.65); line-height: var(--line-height-text); word-break: break-all; white-space: pre-wrap; }
+        /* 나만의 성경역본 모드: 입력창 폰트 각주와 동일 크기 */
+        .free-write-active #user-input[contenteditable] { font-size: calc(var(--font-size-text) * 0.65); line-height: var(--line-height-text); }
         #user-input[contenteditable]:empty::before { content: attr(data-placeholder); color: #c0bdb6; pointer-events: none; }
         #user-input.correct { background-color: #e9f5ef; }
         /* 타이핑 통계 바 */
@@ -179,6 +181,19 @@
             white-space: pre-wrap !important;
             color: var(--ink);
             flex: none;
+        }
+        #reference-text.strict-mode .ref-text-body.ref-empty {
+            position: absolute !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            display: flex !important; flex-direction: column !important;
+            align-items: flex-end !important; justify-content: center !important;
+            padding: 12px 20px !important;
+            font-size: 0.82rem !important;
+            line-height: 1.7 !important;
+            white-space: normal !important;
+            word-break: normal !important;
+            color: #8a8478 !important;
+            width: auto !important;
         }
         .ref-char { display:inline; font-size:inherit; font-family:inherit; line-height:inherit; letter-spacing:inherit; white-space:inherit; word-break:inherit; }
         .ref-char.char-correct { color: var(--ink); }
@@ -222,6 +237,7 @@
         /* ── 서식 툴바 ── */
         /* fmt-toolbar defined above with border-radius */
         .fmt-left { display:flex; align-items:center; gap:1px; flex-wrap:wrap; }
+        .fmt-center { display:flex; align-items:center; justify-content:center; flex:1; }
         .fmt-right { display:flex; align-items:center; gap:1px; }
         .fmt-btn { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border:none; border-radius:7px; background:transparent; cursor:pointer; font-size:0.88rem; font-weight:700; color:var(--ink-soft); font-family:var(--font-main); white-space:nowrap; transition:background 0.12s, color 0.12s; }
         .fmt-btn:hover { background:#f0ece3; color:var(--ink); }
@@ -245,10 +261,23 @@
         .date-pos-btn { border:1px solid var(--rule); background:#fff; border-radius:4px; padding:0 8px; height:24px; line-height:1; font-size:0.72rem; color:var(--ink-soft); cursor:pointer; transition:all 0.12s; font-family:var(--font-main); display:inline-flex; align-items:center; }
         .date-pos-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
         #date-display { font-size:0.78rem; color:#aaa; font-style:italic; flex:1; }
-        #footnote-input { display:block; border:none; border-top:1px dashed #e8e4da; outline:none; color:#333; background:#fffdf8; width:100%; padding:8px 14px; min-height:52px; height:80px; overflow-y:auto; font-family:'Georgia', 'Nanum Myeongjo', serif; font-size:calc(var(--font-size-text) * 0.65); line-height:1.65; word-break:break-all; white-space:pre-wrap; box-sizing:border-box; }
-        #footnote-input:empty::before { content:attr(data-placeholder); color:#c0bdb6; pointer-events:none; }
+        #footnote-input { display:block; border:none; outline:none; color:#444; background:#fffdf8; width:100%; padding:8px 14px 8px 28px; min-height:52px; height:80px; overflow-y:auto; font-family:'Georgia', 'Nanum Myeongjo', serif; font-size:calc(var(--font-size-text) * 0.62); line-height:1.75; word-break:break-all; white-space:pre-wrap; box-sizing:border-box; font-style:italic; }
+        #footnote-input:empty::before { content:attr(data-placeholder); color:#c0bdb6; pointer-events:none; font-style:normal; }
+        .footnote-wrapper { position:relative; background:#fffdf8; }
+        .footnote-wrapper::before { content:'†'; position:absolute; left:12px; top:9px; color:#aaa; font-size:calc(var(--font-size-text) * 0.58); font-family:'Georgia', serif; pointer-events:none; user-select:none; line-height:1; }
+        #footnote-input:empty ~ .footnote-wrapper::before,
+        .footnote-wrapper:has(#footnote-input:empty)::before { opacity:0; }
         .footnote-label { font-size:0.68rem; color:#bbb; padding:3px 14px 1px; background:#fffdf8; border-top:1px dashed #e8e4da; font-style:italic; }
-        .fn-resize-handle { height:20px; background:#fffdf8; display:flex; align-items:center; justify-content:center; gap:10px; border-top:1px solid #ede9e0; }
+        /* 높이 조절 바 — 공통 */
+        .sz-handle { height:22px; background:transparent; display:flex; align-items:center; justify-content:center; gap:0; border-top:1px solid #ede9e1; user-select:none; }
+        .sz-btn { border:none; background:none; cursor:pointer; padding:0 8px; height:16px; font-size:0.65rem; color:#999; line-height:1; transition:color 0.12s; font-family:var(--font-main); display:flex; align-items:center; }
+        .sz-btn:hover { color:#444; background:none; }
+        .sz-label { font-size:0.55rem; color:#bbb; letter-spacing:0.05em; padding:0 5px; border-left:1px solid #e2ddd4; border-right:1px solid #e2ddd4; height:9px; display:flex; align-items:center; user-select:none; pointer-events:none; }
+        .sz-sep-btn { border:none; background:none; cursor:pointer; padding:0 8px; height:16px; font-size:0.7rem; color:#888; font-weight:600; line-height:1; font-family:monospace; display:flex; align-items:center; border-left:1px solid #e2ddd4; margin-left:4px; transition:color 0.12s; }
+        .sz-sep-btn:hover { color:var(--accent); }
+        /* 구버튼 호환 */
+        .fn-resize-handle { display:none; }
+        .fn-sz-btn { display:none; }
         .fn-sz-btn { border:none; background:none; cursor:pointer; font-size:0.9rem; color:#bbb; padding:0 8px; line-height:1; transition:color 0.12s; user-select:none; }
         .fn-sz-btn:hover { color:var(--accent); }
         .fn-sz-reset { font-size:0.78rem; color:#ccc; }
@@ -857,6 +886,7 @@
             #footnote-input {
                 font-size: calc(var(--font-size-text) * 0.72);
                 min-height: 60px;
+                padding-left: 28px;
             }
 
             /* ── 각주 높이 조절 핸들 ── */
@@ -1163,15 +1193,34 @@
                 spellcheck="false"
                 data-free-placeholder="원문 수정 및 필사를 자유롭게 하세요"></div>
 
-            <div id="footnote-input" contenteditable="true"
-                data-placeholder="각주 내용을 입력하세요"
-                spellcheck="false"></div>
-            <div class="fn-resize-handle" id="fn-resize-handle">
-                <button class="fn-sz-btn" id="fn-sz-up2" title="많이 줄이기">««</button>
-                <button class="fn-sz-btn" id="fn-sz-up" title="줄이기">«</button>
-                <button class="fn-sz-btn fn-sz-reset" id="fn-sz-reset" title="초기 크기로">↺</button>
-                <button class="fn-sz-btn" id="fn-sz-down" title="늘리기">»</button>
-                <button class="fn-sz-btn" id="fn-sz-down2" title="많이 늘리기">»»</button>
+            <!-- 입력창↕각주창 비율 조절 핸들 -->
+            <div id="ratio-handle" style="position:relative; height:0; border-top:1px solid #dedad2; z-index:3; overflow:visible;">
+                <div id="ratio-knob" style="position:absolute; left:50%; top:0; transform:translate(-50%,-50%); width:14px; height:14px; border-radius:50%; background:var(--paper); border:1.5px solid #b8b2a8; cursor:ns-resize; flex-shrink:0;"></div>
+            </div>
+
+            <div class="footnote-wrapper">
+                <div id="footnote-input" contenteditable="true"
+                    data-placeholder="각주 내용을 입력하세요"
+                    spellcheck="false"></div>
+            </div>
+
+            <!-- 각주 밑 바: 입력창 높이 조절 -->
+            <div class="sz-handle" id="fn-sz-handle">
+                <button class="sz-btn" id="fn2-sz-up2" title="많이 줄이기">－－</button>
+                <button class="sz-btn" id="fn2-sz-up"  title="줄이기">－</button>
+                <span class="sz-label">입력창</span>
+                <button class="sz-btn" id="fn2-sz-reset" title="초기화">↺</button>
+                <button class="sz-btn" id="fn2-sz-down"  title="늘리기">＋</button>
+                <button class="sz-btn" id="fn2-sz-down2" title="많이 늘리기">＋＋</button>
+            </div>
+
+            <!-- 구 핸들 숨김 -->
+            <div class="fn-resize-handle" id="fn-resize-handle" style="display:none;">
+                <button class="fn-sz-btn" id="fn-sz-up2">««</button>
+                <button class="fn-sz-btn" id="fn-sz-up">«</button>
+                <button class="fn-sz-btn fn-sz-reset" id="fn-sz-reset">↺</button>
+                <button class="fn-sz-btn" id="fn-sz-down">»</button>
+                <button class="fn-sz-btn" id="fn-sz-down2">»»</button>
             </div>
             <!-- 날짜 row: 항상 하단 -->
             <div class="date-row" id="date-row-bottom">
@@ -1240,6 +1289,11 @@
                         </button>
                         <div class="color-picker-pop" id="color-picker-pop" style="display:none;"></div>
                     </div>
+                </div>
+                <div class="fmt-center">
+                    <div class="fmt-divider"></div>
+                    <button class="fmt-btn" id="fn-pipe-btn" title="각주 구분자 삽입  1) 히, '단어' | 2) 히, '단어'" style="font-family:var(--font-main); letter-spacing:0; color:#888; font-size:0.72rem; width:auto; padding:0 10px;">| 각주구분</button>
+                    <div class="fmt-divider"></div>
                 </div>
                 <div class="fmt-right">
                     <div class="fmt-divider"></div>
@@ -1404,7 +1458,7 @@
     </div>
 
     <div id="ver-footer" style="text-align:right; font-size:0.72rem; color:#ccc; margin-top:18px; padding-top:10px; border-top:1px solid var(--rule); position:relative; z-index:1;">
-        <span id="ver-tag" style="cursor:default; user-select:none;">JINs Bible 2026 Web | v4.2.1</span>
+        <span id="ver-tag" style="cursor:default; user-select:none;">JINs Bible 2026 Web | v4.2.2</span>
     </div>
 
     <!-- 이스터에그 오버레이 -->
@@ -1596,26 +1650,92 @@
         });
     });
 
-    // ── 각주 높이 단계 조절 ────────────────────────────────────────────────
+    // ── 각주 밑 바: 입력창 높이 조절 ──────────────────────────────────────
     (function() {
-        const fnBox   = document.getElementById('footnote-input');
-        const STEP    = 60;   // 한 번 클릭당 변화량(px)
-        const DEFAULT = 80;   // 초기 높이
-        const MIN     = 40;   // 최소 높이
+        const inputBox = document.getElementById('user-input');
+        const STEP = 50, DEFAULT = 200, MIN = 60;
         let curH = DEFAULT;
-
         function applyH(h) {
             curH = Math.max(MIN, h);
-            fnBox.style.transition = 'height 0.15s ease';
-            fnBox.style.height = curH + 'px';
+            inputBox.style.minHeight = curH + 'px';
+            inputBox.style.maxHeight = curH + 'px';
         }
-
-        document.getElementById('fn-sz-down').addEventListener('click',  () => applyH(curH + STEP));
-        document.getElementById('fn-sz-down2').addEventListener('click', () => applyH(curH + STEP * 3));
-        document.getElementById('fn-sz-up').addEventListener('click',    () => applyH(curH - STEP));
-        document.getElementById('fn-sz-up2').addEventListener('click',   () => applyH(curH - STEP * 3));
-        document.getElementById('fn-sz-reset').addEventListener('click', () => applyH(DEFAULT));
+        document.getElementById('fn2-sz-down').addEventListener('click',  () => applyH(curH + STEP));
+        document.getElementById('fn2-sz-down2').addEventListener('click', () => applyH(curH + STEP * 3));
+        document.getElementById('fn2-sz-up').addEventListener('click',    () => applyH(curH - STEP));
+        document.getElementById('fn2-sz-up2').addEventListener('click',   () => applyH(curH - STEP * 3));
+        document.getElementById('fn2-sz-reset').addEventListener('click', () => applyH(DEFAULT));
+        ['fn-sz-down','fn-sz-down2','fn-sz-up','fn-sz-up2','fn-sz-reset'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
     })();
+
+    // ── 동그라미 드래그: 입력창↕각주창 비율 조절 ──────────────────────────
+    (function() {
+        const knob    = document.getElementById('ratio-knob');
+        const inputBox = document.getElementById('user-input');
+        const fnBox   = document.getElementById('footnote-input');
+        const INPUT_MIN = 60, FN_MIN = 36;
+        let dragging = false, startY = 0, startInputH = 0, startFnH = 0;
+
+        function getH(el) { return el.getBoundingClientRect().height; }
+
+        function onStart(e) {
+            dragging = true;
+            startY      = e.touches ? e.touches[0].clientY : e.clientY;
+            startInputH = getH(inputBox);
+            startFnH    = getH(fnBox);
+            knob.style.borderColor = '#888';
+            document.body.style.userSelect = 'none';
+            document.body.style.cursor = 'ns-resize';
+            e.preventDefault();
+        }
+        function onMove(e) {
+            if (!dragging) return;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            const delta = y - startY;
+            const newIn = Math.max(INPUT_MIN, startInputH + delta);
+            const newFn = Math.max(FN_MIN,    startFnH    - delta);
+            inputBox.style.minHeight = newIn + 'px';
+            inputBox.style.maxHeight = newIn + 'px';
+            fnBox.style.height       = newFn + 'px';
+        }
+        function onEnd() {
+            if (!dragging) return;
+            dragging = false;
+            knob.style.borderColor = '#b8b2a8';
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+        }
+        knob.addEventListener('mousedown',  onStart);
+        knob.addEventListener('touchstart', onStart, { passive: false });
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('mouseup',   onEnd);
+        document.addEventListener('touchend',  onEnd);
+    })();
+
+    // ── 각주 구분자 | 삽입 ─────────────────────────────────────────────────
+    document.getElementById('fn-pipe-btn').addEventListener('click', function() {
+        const fn = document.getElementById('footnote-input');
+        fn.focus();
+        const sel = window.getSelection();
+        // 저장된 커서 위치 또는 현재 선택 영역 사용
+        const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+        if (range && fn.contains(range.commonAncestorContainer)) {
+            range.deleteContents();
+            const txt = document.createTextNode(' | ');
+            range.insertNode(txt);
+            range.setStartAfter(txt);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else {
+            // 커서가 없으면 맨 끝에 삽입
+            document.execCommand('insertText', false, ' | ');
+        }
+    });
 
     // ── 본문 패널 높이 조절 ────────────────────────────────────────────────
     (function() {
@@ -1913,13 +2033,27 @@ const SPECIAL_CATEGORIES = [
     }
 
     function clearTagsFrom(id) {
-        const label = id === 'user-input' ? '본문' : '각주';
-        if (!confirm(`${label}의 태그를 모두 삭제할까요?`)) return;
         const el = document.getElementById(id);
         if (!el) return;
+        const label = id === 'user-input' ? '본문' : '각주';
+        if (!confirm(`${label}의 태그를 모두 삭제할까요?`)) return;
+        // inline-tag 스팬 → 텍스트 노드로 교체
         el.querySelectorAll('.inline-tag').forEach(span => {
             span.replaceWith(document.createTextNode(span.textContent));
         });
+        // inline-j-tag 스팬 → 내부 텍스트만 남기기
+        el.querySelectorAll('.inline-j-tag').forEach(span => {
+            const frag = document.createDocumentFragment();
+            span.childNodes.forEach(n => frag.appendChild(n.cloneNode(true)));
+            span.replaceWith(frag);
+        });
+        // execCommand로 삽입된 <b><i><u><s><font> 제거
+        el.querySelectorAll('b, i, u, s, font, .inline-color-tag').forEach(node => {
+            const frag = document.createDocumentFragment();
+            node.childNodes.forEach(n => frag.appendChild(n.cloneNode(true)));
+            node.replaceWith(frag);
+        });
+        autoSaveDebounced();
     }
 
     function clearAllDates() {
@@ -2645,6 +2779,19 @@ const SPECIAL_CATEGORIES = [
             // 타이핑 통계 바: 필사 모드일 때만 표시
             showTypingStats(!isFree);
 
+            // 필사→나만의 전환 시 ref-char 색 잔류 제거 → plain text로 복원
+            if (isFree) {
+                const refBody = document.querySelector('#reference-text .ref-text-body');
+                if (refBody && !refBody.classList.contains('ref-empty')) {
+                    if (bibleData && bibleData[currentIndex]) {
+                        refBody.textContent = bibleData[currentIndex].text;
+                    } else {
+                        // ref-char span만 걷어내고 텍스트 유지
+                        refBody.innerHTML = refBody.innerText;
+                    }
+                }
+            }
+
             const input = document.getElementById('user-input');
             input.setAttribute('data-placeholder', isFree ? (input.dataset.freePlaceholder || '원문 수정 및 필사를 자유롭게 하세요') : '위와 동일하게 입력 시 다음 절로 자동 이동됩니다.');
             input.focus();
@@ -2672,6 +2819,9 @@ const SPECIAL_CATEGORIES = [
         document.getElementById('mode-select-freewrite').style.display = 'none';
         const freeRadio = document.querySelector('input[name="typing-mode"][value="free"]');
         if (freeRadio) freeRadio.checked = true;
+        // 입력창 소형 폰트 클래스 직접 적용
+        const typingFrame = document.querySelector('.typing-frame');
+        if (typingFrame) typingFrame.classList.add('free-write-active');
         document.getElementById('reference-text').style.display = '';
         document.getElementById('progress-container').style.display = 'none';
         document.getElementById('nav-bar').classList.add('visible');
@@ -2720,6 +2870,8 @@ const SPECIAL_CATEGORIES = [
         const lbl2 = document.getElementById('header-mode-label'); if(lbl2){ lbl2.textContent=''; lbl2.style.display='none'; }
         document.getElementById('user-input').innerHTML = '';
         document.getElementById('user-input').setAttribute('data-placeholder', '위와 동일하게 입력 시 다음 절로 자동 이동됩니다.');
+        const typingFrame = document.querySelector('.typing-frame');
+        if (typingFrame) typingFrame.classList.remove('free-write-active');
     }
 
     // ── 파일 로드용 네비 ─────────────────────────────────────────────────
@@ -3438,6 +3590,12 @@ const SPECIAL_CATEGORIES = [
         if (show) refEl.classList.add('strict-mode');
         else refEl.classList.remove('strict-mode');
         if (!show) stopStatsTimer();
+        // 나만의 성경역본(free) = !show → 입력창 소형 폰트 토글
+        const typingFrame = document.querySelector('.typing-frame');
+        if (typingFrame) {
+            if (!show) typingFrame.classList.add('free-write-active');
+            else typingFrame.classList.remove('free-write-active');
+        }
     }
     let chartVisible = false;
     function toggleChart() {
