@@ -83,7 +83,7 @@
         .btn-noref:hover { background:#f2f8f5; }
         .btn-noref:active { transform:scale(0.98); }
         /* 본문 변경 슬라이드 메뉴 — 평소 숨김, 호버 시 우측에서 슬라이드 */
-        #reference-text { overflow:hidden; padding-top: 10px; padding-bottom: 10px; display: flex; align-items: flex-start; }
+        #reference-text { overflow:hidden; padding-top: 10px; padding-bottom: 10px; display: flex; align-items: flex-start; height: auto; min-height: 140px; max-height: 140px; overflow-y: hidden; transition: max-height 0.3s ease; }
         .ref-text-body { padding-right: 14px; text-align: left; display: block; flex: 1; }
         /* 빈 본문 안내 — 우측 정렬, 메뉴 나오면 자연스럽게 밀림 */
         .ref-text-body.ref-empty {
@@ -107,7 +107,16 @@
         .ref-text-body.ref-empty .ref-empty-emph {
             color: #5a5750; font-weight: 600; padding: 0 2px;
         }
-        /* 그라데이션 인디케이터 — 우측에서 본문 쪽으로 흐림 */
+        /* 드래그앤드롭 — 참고 본문 창 */
+        #reference-text.ref-dragover {
+            background: #e8f2fb !important;
+            outline: 2px dashed #7aafd4;
+            outline-offset: -3px;
+        }
+        #reference-text.ref-dragover .ref-text-body.ref-empty {
+            color: #5a8ab0;
+        }
+        #reference-text.ref-dragover .ref-side-indicator { opacity: 0; }
         .ref-side-indicator {
             position:absolute; right:0; top:0; bottom:0; width:48px;
             background: linear-gradient(to left, rgba(180,168,148,0.18), transparent);
@@ -995,8 +1004,8 @@
 
     <div class="file-upload-container" id="drop-zone">
         <div id="drop-text">
-            <strong style="color: var(--accent);">참고할 성경 역본 파일을<br>이곳에 끌어다 놓거나 클릭하여 불러오세요</strong>
-            <p style="font-size:0.8rem; color:#8aab9e; margin:10px 0 0; letter-spacing:0.02em;">✦ TXT · BDB · ZIP 파일 사용 가능 ✦</p>
+            <strong style="color: var(--accent);">참고할 성경역본 불러오기</strong>
+            <p style="font-size:0.8rem; color:#8aab9e; margin:10px 0 0; letter-spacing:0.02em;">✦ TXT · BDB · ZIP / 드래그드롭 가능 ✦</p>
             <button class="btn-noref" onclick="event.stopPropagation(); startFreeWrite();">📝 자료 없이 바로 시작</button>
         </div>
         <input type="file" id="file-input" accept=".txt,.bdb">
@@ -2629,10 +2638,10 @@ const SPECIAL_CATEGORIES = [
         const body  = refEl.querySelector('.ref-text-body');
         if (body) {
             body.classList.add('ref-empty');
-            body.innerHTML = '본문 불러오기 메뉴 → <span class="ref-empty-emph">원문 불러오기</span>';
+            body.innerHTML = '참고 성경역본 <strong>불러오기</strong>(파일 드롭 가능)→';
         }
         updateRefSideMenuLabel();
-        document.getElementById('verse-title').innerText = '자유 입력 모드';
+        document.getElementById('verse-title').innerText = '나만의 성경역본';
         const lbl = document.getElementById('header-mode-label'); if(lbl){ lbl.textContent=''; lbl.style.display='none'; }
         input.focus();
     }
@@ -2830,6 +2839,50 @@ const SPECIAL_CATEGORIES = [
                 handleFile(f);
             };
         }
+
+        // ── 참고 본문 창 드래그앤드롭 ──────────────────────────────
+        const refEl = document.getElementById('reference-text');
+        if (refEl) {
+            let dragCounter = 0;
+            refEl.addEventListener('dragenter', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                dragCounter++;
+                refEl.classList.add('ref-dragover');
+                // 안내문 텍스트 교체
+                const body = refEl.querySelector('.ref-text-body.ref-empty');
+                if (body) { body.dataset.origHtml = body.innerHTML; body.innerHTML = '📂 여기에 놓으면 본문이 교체됩니다'; }
+            });
+            refEl.addEventListener('dragleave', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                dragCounter--;
+                if (dragCounter <= 0) {
+                    dragCounter = 0;
+                    refEl.classList.remove('ref-dragover');
+                    const body = refEl.querySelector('.ref-text-body.ref-empty');
+                    if (body && body.dataset.origHtml !== undefined) { body.innerHTML = body.dataset.origHtml; delete body.dataset.origHtml; }
+                }
+            });
+            refEl.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); });
+            refEl.addEventListener('drop', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                dragCounter = 0;
+                refEl.classList.remove('ref-dragover');
+                const body = refEl.querySelector('.ref-text-body.ref-empty');
+                if (body && body.dataset.origHtml !== undefined) { body.innerHTML = body.dataset.origHtml; delete body.dataset.origHtml; }
+                const f = e.dataTransfer.files[0];
+                if (!f) return;
+                const ext = f.name.toLowerCase().split('.').pop();
+                if (!['txt','bdb','aab','zip'].includes(ext)) return alert('지원하지 않는 파일 형식입니다.\nTXT · BDB · AAB · ZIP 파일만 가능합니다.');
+                if (bibleData.length && !confirm(`"${f.name}"으로 본문을 교체합니다. 진행하시겠습니까?`)) return;
+                if (freeWriteMode) {
+                    freeWriteMode = false; freeCurrentKey = '';
+                    document.getElementById('progress-container').style.display = '';
+                    document.getElementById('verse-title').innerText = '';
+                }
+                bibleData = [];
+                handleFile(f);
+            });
+        }
     });
 
     function loadVerse(idx) {
@@ -2844,6 +2897,27 @@ const SPECIAL_CATEGORIES = [
         if (body) {
             body.classList.remove('ref-empty');
             body.textContent = data.text;
+            // 콘텐츠가 기본 높이(140px)를 넘을 때만 확장, 최대 260px
+            const refEl2 = document.getElementById('reference-text');
+            refEl2.style.maxHeight = 'none';
+            refEl2.style.overflowY = 'hidden';
+            const natural = refEl2.scrollHeight;
+            let newRefH;
+            if (natural > 140) {
+                newRefH = Math.min(natural, 260);
+                refEl2.style.maxHeight = newRefH + 'px';
+                refEl2.style.overflowY = natural > 260 ? 'auto' : 'hidden';
+            } else {
+                newRefH = 140;
+                refEl2.style.maxHeight = '140px';
+                refEl2.style.overflowY = 'hidden';
+            }
+            // 입력 창도 동일 높이로 연동
+            const userInput = document.getElementById('user-input');
+            if (userInput) {
+                userInput.style.minHeight = newRefH + 'px';
+                userInput.style.maxHeight = newRefH + 'px';
+            }
         }
         updateRefSideMenuLabel();
         const input = document.getElementById('user-input');
