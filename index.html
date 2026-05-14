@@ -160,8 +160,7 @@
 
         /* contenteditable 입력창 */
         #user-input[contenteditable] { display: block; border: none; outline: none; color: var(--ink); background-color: #ffffff; width: 100%; padding: var(--padding-val); min-height: 140px; max-height: 200px; overflow-y: auto; font-family: var(--font-main); font-size: calc(var(--font-size-text) * 0.65); line-height: var(--line-height-text); word-break: break-all; white-space: pre-wrap; }
-        /* 나만의 성경역본 모드: 입력창 폰트 각주와 동일 크기 */
-        .free-write-active #user-input[contenteditable] { font-size: calc(var(--font-size-text) * 0.65); line-height: var(--line-height-text); }
+        /* 나만의 성경역본 / 필사 모드 공통: 입력창 폰트 = 참고본문과 동일 (JS로 직접 적용) */
         #user-input[contenteditable]:empty::before { content: attr(data-placeholder); color: #c0bdb6; pointer-events: none; }
         #user-input.correct { background-color: #e9f5ef; }
         /* 타이핑 통계 바 */
@@ -169,18 +168,17 @@
         .tstat-item { display:inline-flex; align-items:baseline; gap:3px; font-size:0.78rem; color:var(--ink-soft); }
         .tstat-item strong { color:var(--accent); font-weight:700; }
         .tstat-unit { font-size:0.68rem; color:#aaa; }
-        /* 필사 모드 — 참고 본문을 입력창과 완전히 동일한 렌더링으로 강제 */
-        #reference-text.strict-mode { padding: 0 !important; height: auto !important; min-height: unset !important; overflow: visible !important; display: block !important; }
+        /* 필사 모드 — 참고 본문 폰트/패딩만 강제, 레이아웃은 나만의 역본 모드와 동일 유지 */
+        #reference-text.strict-mode { padding: 0 !important; max-height: 140px !important; overflow-y: auto !important; }
         #reference-text.strict-mode .ref-text-body {
-            display: block; width: 100%; box-sizing: border-box;
-            padding: var(--padding-val) !important;
             font-family: var(--font-main) !important;
             font-size: var(--font-size-text) !important;
             line-height: var(--line-height-text) !important;
             word-break: break-all !important;
             white-space: pre-wrap !important;
-            color: var(--ink);
-            flex: none;
+            color: var(--ink) !important;
+            padding: var(--padding-val) !important;
+            flex: 1;
         }
         #reference-text.strict-mode .ref-text-body.ref-empty {
             position: absolute !important;
@@ -1091,6 +1089,16 @@
         <select class="nav-select" id="nav-chapter"><option value="">장 선택</option></select>
         <select class="nav-select" id="nav-verse"><option value="">절 선택</option></select>
         <button class="btn-nav" onclick="jumpTo()">이동</button>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:14px; font-size:0.88rem; flex-shrink:0;">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="typing-mode" value="strict"> 디지털 필사</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="typing-mode" value="free" checked> 나만의 성경역본</label>
+        </div>
+        <!-- 필사 모드 통계 -->
+        <div id="typing-stats" style="display:none; align-items:baseline; gap:8px; flex-shrink:0;">
+            <span class="tstat-item">오타<strong id="tstat-err">0</strong></span>
+            <span class="tstat-item">정확도 <strong id="tstat-acc">100</strong><span class="tstat-unit">%</span></span>
+            <span class="tstat-item"><span class="tstat-unit">CMP</span><strong id="tstat-cpm" style="font-size:1.4rem; line-height:1;">0</strong></span>
+        </div>
     </div>
 
     <div id="exercise-ui" style="display:none;">
@@ -1150,20 +1158,8 @@
 
         <!-- 타이핑 통계 — mode-select 내 우측 인라인 표시 -->
 
-        <div class="mode-select" id="mode-select-normal">
-            <label><input type="radio" name="typing-mode" value="strict"> 디지털 필사</label>
-            <label><input type="radio" name="typing-mode" value="free" checked> 나만의 성경역본</label>
-            <!-- 필사 모드 통계 (우측) -->
-            <div id="typing-stats" style="display:none; margin-left:auto; align-items:baseline; gap:10px;">
-                <span class="tstat-item">오타<strong id="tstat-err">0</strong></span>
-                <span class="tstat-item">정확도 <strong id="tstat-acc">100</strong><span class="tstat-unit">%</span></span>
-                <span class="tstat-item"><span class="tstat-unit">CMP</span><strong id="tstat-cpm" style="font-size:1.5rem; line-height:1;">0</strong></span>
-            </div>
-            <div id="free-tools" style="margin-left:auto; display:flex; gap:5px;">
-                <button class="btn-apply" onclick="applySameText()">본문 자동 채움</button>
-                <button class="btn-action" onclick="forcePrev()">이전 절</button>
-                <button class="btn-action" onclick="forceNext()">다음 절 (Enter)</button>
-            </div>
+        <div class="mode-select" id="mode-select-normal" style="display:none;">
+            <!-- 라디오·통계는 nav-bar로 이동 / 액션버튼은 참고본문 아래로 이동 -->
         </div>
 
         <div class="mode-select" id="mode-select-freewrite" style="display:none;">
@@ -1176,7 +1172,7 @@
         </div>
 
         <div class="typing-frame">
-            <div id="reference-text" class="verse-box text-common" style="position:relative;">
+            <div id="reference-text" class="verse-box text-common" style="position:relative; background:#ffffff;">
                 <div class="ref-text-body">문장이 여기에 표시됩니다.</div>
                 <div class="ref-side-indicator"></div>
                 <div class="ref-side-menu" id="ref-side-menu" onclick="event.stopPropagation();">
@@ -1186,6 +1182,12 @@
                     <button class="ref-side-btn" onclick="restoreRefOriginal()" title="원문으로 복원">↺ 원문 복원</button>
                     <input type="file" id="ref-change-input" accept=".txt,.bdb,.aab,.zip" style="display:none;">
                 </div>
+            </div>
+            <!-- 참고본문 아래 액션 버튼 -->
+            <div id="free-tools" style="display:flex; justify-content:flex-end; gap:5px; padding:6px 2px;">
+                <button class="btn-apply" onclick="applySameText()">본문 자동 채움</button>
+                <button class="btn-action" onclick="forcePrev()">이전 절</button>
+                <button class="btn-action" onclick="forceNext()">다음 절 (Enter)</button>
             </div>
             <!-- 날짜 위치: 상단 -->
             <div id="user-input" contenteditable="true"
@@ -2590,6 +2592,7 @@ const SPECIAL_CATEGORIES = [
                     document.getElementById('settings-bar').style.display = 'flex';
                     document.getElementById('btn-chart').style.display = 'inline-block';
                     buildBookNav();
+                    initTypingMode();
                     loadVerse(0);
                 }
         };
@@ -2650,6 +2653,7 @@ const SPECIAL_CATEGORIES = [
                     document.getElementById('settings-bar').style.display = 'flex';
                     document.getElementById('btn-chart').style.display = 'inline-block';
                     buildBookNav();
+                    initTypingMode();
                     loadVerse(0);
                 }
             } catch (err) {
@@ -2744,6 +2748,7 @@ const SPECIAL_CATEGORIES = [
                     document.getElementById('exercise-ui').style.display = 'block';
                     document.getElementById('settings-bar').style.display = 'flex';
                     document.getElementById('btn-chart').style.display = 'inline-block';
+                    initTypingMode();
                     loadVerse(resumeIdx);
                 }, 100);
             }, 50);
@@ -2765,12 +2770,20 @@ const SPECIAL_CATEGORIES = [
             const isFree = e.target.value === 'free';
             document.getElementById('free-tools').style.display = isFree ? 'flex' : 'none';
             // 따라쓰기(필사) 모드: 주석 입력창 / 날짜 / 태그 / 편집기능 모두 숨김
-            const fn   = document.getElementById('footnote-input');
-            const dr   = document.getElementById('date-row-bottom');
-            const fmtb = document.querySelector('.typing-frame .fmt-toolbar');
-            if (fn)   fn.style.display   = isFree ? '' : 'none';
-            if (dr)   dr.style.display   = isFree ? '' : 'none';
-            if (fmtb) fmtb.style.display = isFree ? '' : 'none';
+            const fn          = document.getElementById('footnote-input');
+            const fnWrapper   = document.querySelector('.footnote-wrapper');
+            const ratioHandle = document.getElementById('ratio-handle');
+            const fnSzHandle  = document.getElementById('fn-sz-handle');
+            const dr          = document.getElementById('date-row-bottom');
+            const fmtb        = document.querySelector('.typing-frame .fmt-toolbar');
+            if (fn)          fn.style.display          = isFree ? '' : 'none';
+            if (fnWrapper)   fnWrapper.style.display   = isFree ? '' : 'none';
+            if (ratioHandle) ratioHandle.style.display = isFree ? '' : 'none';
+            if (fnSzHandle)  fnSzHandle.style.display  = isFree ? '' : 'none';
+            if (dr)          dr.style.display          = isFree ? '' : 'none';
+            if (fmtb)        fmtb.style.display        = isFree ? '' : 'none';
+            const freeTools = document.getElementById('free-tools');
+            if (freeTools)   freeTools.style.display   = isFree ? 'flex' : 'none';
 
             // 자료 없이 시작 모드(freeWriteMode)에서 모드별 헤더 타이틀 자동 변경 (라디오 라벨과 동일)
             if (freeWriteMode) {
@@ -2814,8 +2827,7 @@ const SPECIAL_CATEGORIES = [
         fileNameBase = "나만의성경_자유작성";
         document.getElementById('drop-zone').style.display = 'none';
         document.getElementById('action-grid').style.display = 'none';
-        // 풀 UI 표시 — 본문 자동 채움 / 이전절 / 다음절 버튼 포함된 mode-select-normal 사용
-        document.getElementById('mode-select-normal').style.display = 'flex';
+        // mode-select-normal은 숨김 처리됨 (라디오→nav-bar, 액션→참고본문 아래)
         document.getElementById('mode-select-freewrite').style.display = 'none';
         const freeRadio = document.querySelector('input[name="typing-mode"][value="free"]');
         if (freeRadio) freeRadio.checked = true;
@@ -3108,26 +3120,33 @@ const SPECIAL_CATEGORIES = [
         if (body) {
             body.classList.remove('ref-empty');
             body.textContent = data.text;
-            // 콘텐츠가 기본 높이(140px)를 넘을 때만 확장, 최대 260px
             const refEl2 = document.getElementById('reference-text');
-            refEl2.style.maxHeight = 'none';
-            refEl2.style.overflowY = 'hidden';
-            const natural = refEl2.scrollHeight;
-            let newRefH;
-            if (natural > 140) {
-                newRefH = Math.min(natural, 260);
-                refEl2.style.maxHeight = newRefH + 'px';
-                refEl2.style.overflowY = natural > 260 ? 'auto' : 'hidden';
-            } else {
-                newRefH = 140;
+            const isStrict = refEl2.classList.contains('strict-mode');
+            if (isStrict) {
+                // 필사 모드: 고정 높이, 스크롤 가능
                 refEl2.style.maxHeight = '140px';
+                refEl2.style.overflowY = 'auto';
+            } else {
+                // 나만의 성경역본: 콘텐츠 크기에 따라 동적 확장 (최대 260px)
+                refEl2.style.maxHeight = 'none';
                 refEl2.style.overflowY = 'hidden';
-            }
-            // 입력 창도 동일 높이로 연동
-            const userInput = document.getElementById('user-input');
-            if (userInput) {
-                userInput.style.minHeight = newRefH + 'px';
-                userInput.style.maxHeight = newRefH + 'px';
+                const natural = refEl2.scrollHeight;
+                let newRefH;
+                if (natural > 140) {
+                    newRefH = Math.min(natural, 260);
+                    refEl2.style.maxHeight = newRefH + 'px';
+                    refEl2.style.overflowY = natural > 260 ? 'auto' : 'hidden';
+                } else {
+                    newRefH = 140;
+                    refEl2.style.maxHeight = '140px';
+                    refEl2.style.overflowY = 'hidden';
+                }
+                // 입력 창도 동일 높이로 연동
+                const userInput = document.getElementById('user-input');
+                if (userInput) {
+                    userInput.style.minHeight = newRefH + 'px';
+                    userInput.style.maxHeight = newRefH + 'px';
+                }
             }
         }
         updateRefSideMenuLabel();
@@ -3583,6 +3602,13 @@ const SPECIAL_CATEGORIES = [
         document.getElementById('tstat-err').textContent  = err;
         document.getElementById('tstat-acc').textContent  = acc;
     }
+    // 파일 로드 시 현재 라디오 선택에 맞게 모드 클래스 초기화
+    function initTypingMode() {
+        const checked = document.querySelector('input[name="typing-mode"]:checked');
+        const isStrict = checked && checked.value === 'strict';
+        showTypingStats(isStrict);
+    }
+
     function showTypingStats(show) {
         const el = document.getElementById('typing-stats');
         el.style.display = show ? 'flex' : 'none';
@@ -3590,11 +3616,59 @@ const SPECIAL_CATEGORIES = [
         if (show) refEl.classList.add('strict-mode');
         else refEl.classList.remove('strict-mode');
         if (!show) stopStatsTimer();
-        // 나만의 성경역본(free) = !show → 입력창 소형 폰트 토글
+
+        // ref-text-body와 user-input에 완전히 동일한 값을 직접 적용
+        const refBody = refEl.querySelector('.ref-text-body');
+        const input   = document.getElementById('user-input');
+        const FONT_SIZE   = '1.6rem';
+        const LINE_HEIGHT = '1.7';
+        const PADDING     = '18px';
+        const WORD_BREAK  = 'break-all';
+        const WHITE_SPACE = 'pre-wrap';
+        const FONT_FAMILY = "var(--font-main)";
+
+        if (show) {
+            // 필사 모드: 폰트만 ref-text-body에 적용 (패딩은 역본 모드와 동일하게 유지)
+            if (refBody) {
+                refBody.style.fontSize   = FONT_SIZE;
+                refBody.style.lineHeight = LINE_HEIGHT;
+                refBody.style.wordBreak  = WORD_BREAK;
+                refBody.style.whiteSpace = WHITE_SPACE;
+                refBody.style.fontFamily = FONT_FAMILY;
+                refBody.style.color      = 'var(--ink)';
+            }
+            if (input) {
+                input.style.fontSize   = FONT_SIZE;
+                input.style.lineHeight = LINE_HEIGHT;
+                input.style.padding    = PADDING;
+                input.style.wordBreak  = WORD_BREAK;
+                input.style.whiteSpace = WHITE_SPACE;
+            }
+        } else {
+            // 나만의 성경역본: ref-text-body 인라인 초기화
+            if (refBody) {
+                refBody.style.fontSize = refBody.style.lineHeight =
+                refBody.style.wordBreak = refBody.style.whiteSpace = refBody.style.fontFamily =
+                refBody.style.color = '';
+            }
+            if (input) {
+                input.style.fontSize   = FONT_SIZE;
+                input.style.lineHeight = LINE_HEIGHT;
+                input.style.padding    = PADDING;
+                input.style.wordBreak  = WORD_BREAK;
+                input.style.whiteSpace = WHITE_SPACE;
+            }
+        }
+
         const typingFrame = document.querySelector('.typing-frame');
         if (typingFrame) {
-            if (!show) typingFrame.classList.add('free-write-active');
-            else typingFrame.classList.remove('free-write-active');
+            if (!show) {
+                typingFrame.classList.add('free-write-active');
+                typingFrame.classList.remove('strict-active');
+            } else {
+                typingFrame.classList.remove('free-write-active');
+                typingFrame.classList.add('strict-active');
+            }
         }
     }
     let chartVisible = false;
