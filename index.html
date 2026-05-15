@@ -23,7 +23,7 @@
         }
         * { box-sizing: border-box; }
         body { margin: 0; background-color: var(--paper); color: var(--ink); font-family: var(--font-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .container { width: 100%; max-width: 680px; background-color: var(--paper-white); padding: 40px; border-radius: 12px; border: 1px solid var(--rule); box-shadow: 0 10px 40px rgba(0,0,0,0.06); position: relative; }
+        .container { width: 100%; max-width: 620px; background-color: var(--paper-white); padding: 30px; border-radius: 12px; border: 1px solid var(--rule); box-shadow: 0 10px 40px rgba(0,0,0,0.06); position: relative; }
 
         .header { margin-bottom: 20px; border-bottom: 2px solid var(--ink); padding-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; position: sticky; top: 0; z-index: 30; background: var(--paper-white); }
         .title { font-size: 1.5rem; font-weight: 800; margin: 0; color: var(--accent); }
@@ -85,14 +85,14 @@
         .btn-noref:hover { background:#f2f8f5; }
         .btn-noref:active { transform:scale(0.98); }
         /* 본문 변경 슬라이드 메뉴 — 평소 숨김, 호버 시 우측에서 슬라이드 */
-        #reference-text { overflow:hidden; padding-top: 10px; padding-bottom: 10px; display: flex; align-items: flex-start; height: auto; min-height: 140px; max-height: 140px; overflow-y: hidden; transition: max-height 0.3s ease; }
-        .ref-text-body { padding-right: 14px; text-align: left; display: block; flex: 1; }
+        #reference-text { overflow:hidden; display: flex; align-items: flex-start; height: auto; min-height: 140px; max-height: 140px; overflow-y: hidden; transition: max-height 0.3s ease; box-sizing: border-box; position: relative; padding: 0; }
+        .ref-text-body { text-align: left; display: block; flex: 1; min-width: 0; box-sizing: border-box; padding: var(--padding-val); word-break: break-all; white-space: pre-wrap; font-family: var(--font-main); font-size: var(--font-size-text); line-height: var(--line-height-text); }
         /* 빈 본문 안내 — 좌측 샘플버튼 + 우측 업로드 안내 */
         .ref-text-body.ref-empty {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             display: flex; flex-direction: row; align-items: center; justify-content: space-between;
-            padding: 12px 20px;
+            padding: var(--padding-val);
             font-size: 0.82rem;
             color: #8a8478;
             line-height: 1.7;
@@ -100,16 +100,13 @@
             pointer-events: auto;
             transition: right 0.25s ease;
         }
-        .ref-text-body.ref-empty::after {
-            content: '참고 성경역본\A불러오기\A(파일 드롭 가능)→';
-            white-space: pre;
-            font-size: 0.82rem;
-            color: #8a8478;
-            text-align: right;
-            line-height: 1.7;
-            pointer-events: none;
+        .ref-text-body.ref-empty::after { content: ''; display: none; }
+        .ref-empty-upload-hint {
+            font-size: 0.82rem; color: #8a8478; text-align: right;
+            line-height: 1.7; pointer-events: none; flex-shrink: 0;
         }
-        #reference-text:hover .ref-text-body.ref-empty { right: 112px; }
+        #reference-text:hover .ref-text-body.ref-empty,
+        #reference-text.is-editing .ref-text-body.ref-empty { right: 120px !important; }
         .ref-text-body.ref-empty .ref-empty-icon {
             display: block; font-size: 1.4rem; color: #b8b2a4;
             margin-bottom: 8px; opacity: 0.85; text-align: right;
@@ -142,6 +139,8 @@
             box-shadow:-4px 0 16px rgba(0,0,0,0.06);
         }
         #reference-text:not(.is-editing):hover .ref-side-menu, .ref-side-menu:hover { right:0; }
+        #reference-text:not(.is-editing):hover #sample-notice,
+        .ref-side-menu:hover ~ #sample-notice { right: 122px; }
         #reference-text.is-editing .ref-side-menu { right:0; pointer-events:auto; }
         #reference-text.is-editing .ref-side-indicator { opacity:0; }
         #reference-text.is-editing { background:#eef4fb; }
@@ -158,16 +157,21 @@
         .ref-side-btn-cancel { color:#a05040 !important; }
         .ref-side-btn-cancel:hover { background:#fdf0ec !important; border-color:#e8c4b8 !important; color:#c03020 !important; }
 
-        .nav-bar { display: none; gap: 6px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+        /* ── 네비게이션 바 ── */
+        .nav-bar { display: none; flex-direction: column; gap: 8px; margin-bottom: 16px; }
         .nav-bar.visible { display: flex; }
-        .nav-select { border: 1px solid var(--rule); border-radius: 4px; padding: 0 8px; height: 33px; box-sizing: border-box; font-size: 0.85rem; background-color: #fff; outline: none; }
-        /* 주석 네비바 — PC에서 높이 통일 */
+        .nav-row { display: flex; align-items: center; gap: 6px; }
+        .nav-row-selects { flex-wrap: nowrap; }
+        .nav-row-selects .nav-select { flex: 1; min-width: 0; }
+        .nav-row-mode { padding: 5px 12px; background: #f8f7f2; border-radius: 7px; border: 1px solid var(--rule); }
+        .nav-select { border: 1px solid var(--rule); border-radius: 4px; padding: 0 8px; height: 33px; box-sizing: border-box; font-size: 0.85rem; background-color: #fff; outline: none; min-width: 0; }
+        /* 주석 네비바 — PC에서 높이 통일, 가로 배치 유지 */
         #com-nav-bar .nav-select { height: 33px; padding: 0 8px; }
         #com-nav-bar .btn-nav    { height: 33px; min-height: unset; padding: 0 12px; }
-        #com-nav-bar.nav-bar     { align-items: center; }
+        #com-nav-bar.nav-bar     { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; }
 
         /* contenteditable 입력창 */
-        #user-input[contenteditable] { display: block; border: none; outline: none; color: var(--ink); background-color: #ffffff; width: 100%; padding: var(--padding-val); min-height: 140px; max-height: 200px; overflow-y: auto; font-family: var(--font-main); font-size: calc(var(--font-size-text) * 0.65); line-height: var(--line-height-text); word-break: break-all; white-space: pre-wrap; }
+        #user-input[contenteditable] { display: block; border: none; outline: none; color: var(--ink); background-color: #ffffff; width: 100%; box-sizing: border-box; padding: var(--padding-val); min-height: 140px; max-height: 200px; overflow-y: auto; font-family: var(--font-main); font-size: var(--font-size-text); line-height: var(--line-height-text); word-break: break-all; white-space: pre-wrap; }
         /* 나만의 성경역본 / 필사 모드 공통: 입력창 폰트 = 참고본문과 동일 (JS로 직접 적용) */
         .sample-btn { border:none; background:none; cursor:pointer; font-size:0.7rem; color:#bbb; font-family:var(--font-main); white-space:nowrap; padding:0 4px; line-height:1; font-weight:400; transition:font-weight 0.1s, color 0.1s; }
         .sample-btn:hover { font-weight:700; color:#888; }
@@ -179,7 +183,7 @@
         .tstat-item strong { color:var(--accent); font-weight:700; }
         .tstat-unit { font-size:0.68rem; color:#aaa; }
         /* 필사 모드 — 참고 본문 폰트/패딩만 강제, 레이아웃은 나만의 역본 모드와 동일 유지 */
-        #reference-text.strict-mode { padding: 0 !important; max-height: 140px !important; overflow-y: auto !important; }
+        #reference-text.strict-mode { max-height: 140px !important; overflow-y: auto !important; }
         #reference-text.strict-mode .ref-text-body {
             font-family: var(--font-main) !important;
             font-size: var(--font-size-text) !important;
@@ -187,22 +191,25 @@
             word-break: break-all !important;
             white-space: pre-wrap !important;
             color: var(--ink) !important;
-            padding: var(--padding-val) !important;
-            flex: 1;
         }
         #reference-text.strict-mode .ref-text-body.ref-empty {
             position: absolute !important;
-            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            top: 0 !important; left: 0 !important; bottom: 0 !important;
             display: flex !important; flex-direction: row !important;
             align-items: center !important; justify-content: space-between !important;
-            padding: 12px 20px !important;
+            padding: var(--padding-val) !important;
             font-size: 0.82rem !important;
             line-height: 1.7 !important;
             white-space: normal !important;
             word-break: normal !important;
             color: #8a8478 !important;
             width: auto !important;
+            /* right는 hover/is-editing CSS가 제어하도록 여기서 지정하지 않음 */
         }
+        /* 필사 모드에서도 메뉴 hover/편집 시 안내문 밀림 적용 */
+        #reference-text.strict-mode .ref-text-body.ref-empty { right: 0; }
+        #reference-text.strict-mode:hover .ref-text-body.ref-empty,
+        #reference-text.strict-mode.is-editing .ref-text-body.ref-empty { right: 120px !important; }
         .ref-char { display:inline; font-size:inherit; font-family:inherit; line-height:inherit; letter-spacing:inherit; white-space:inherit; word-break:inherit; }
         .ref-char.char-correct { color: var(--ink); }
         .ref-char.char-wrong   { color: #c03030; }
@@ -221,8 +228,12 @@
 
         .typing-frame { border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background-color: var(--paper-white); }
         .verse-box { background-color: #f8f7f2; color: #5a5750; border-bottom: 1px solid var(--rule); border-radius: 10px 10px 0 0; }
-        .fmt-toolbar { display:flex; align-items:center; justify-content:space-between; padding:4px 8px; border-top:1px solid var(--rule); background:#faf9f6; gap:2px; border-radius: 0 0 10px 10px; }
-        .text-common { font-family: var(--font-main); font-size: var(--font-size-text); line-height: var(--line-height-text); padding: var(--padding-val); width: 100%; word-break: break-all; white-space: pre-wrap; height: 140px; overflow-y: auto; }
+        .fmt-toolbar { display:flex; align-items:center; padding:4px 8px; border-top:1px solid var(--rule); background:#faf9f6; border-radius: 0 0 10px 10px; overflow-x:auto; overflow-y:visible; scrollbar-width:none; -ms-overflow-style:none; }
+        .fmt-toolbar::-webkit-scrollbar { display:none; }
+        .fmt-left { display:flex; align-items:center; gap:1px; flex-wrap:nowrap; flex-shrink:0; }
+        .fmt-center { display:none; }
+        .fmt-right  { display:none; }
+        .text-common { font-family: var(--font-main); font-size: var(--font-size-text); line-height: var(--line-height-text); padding: 0; width: 100%; box-sizing: border-box; word-break: break-all; white-space: pre-wrap; height: 140px; overflow-y: auto; }
         /* verse-box defined above with border-radius */
         #user-input.correct { background-color: #e9f5ef; }
 
@@ -709,7 +720,7 @@
 
             /* ── 내비 바 ── */
             .nav-bar { gap: 6px; }
-            .nav-bar .nav-select { flex: 1; font-size: 0.92rem; height: 44px; }
+            .nav-row-selects .nav-select { height: 44px; font-size: 0.92rem; }
             .btn-nav { height: 44px; font-size: 0.92rem; padding: 0 16px; }
 
             /* ── 버튼 기본 터치 크기 ── */
@@ -1097,20 +1108,28 @@
     </div>
 
     <div class="nav-bar" id="nav-bar">
-        <select class="nav-select" id="nav-book"><option value="">책 선택</option></select>
-        <select class="nav-select" id="nav-chapter"><option value="">장 선택</option></select>
-        <select class="nav-select" id="nav-verse"><option value="">절 선택</option></select>
-        <button class="btn-nav" onclick="jumpTo()">이동</button>
-        <div style="margin-left:auto; display:flex; align-items:center; gap:14px; font-size:0.88rem; flex-shrink:0;">
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="typing-mode" value="strict"> 디지털 필사</label>
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="typing-mode" value="free" checked> 나만의 성경역본</label>
+        <!-- 1행: 책/장/절 네비게이션 + 이전/다음 절 -->
+        <div class="nav-row nav-row-selects">
+            <select class="nav-select" id="nav-book"><option value="">책 선택</option></select>
+            <select class="nav-select" id="nav-chapter"><option value="">장 선택</option></select>
+            <select class="nav-select" id="nav-verse"><option value="">절 선택</option></select>
+            <button class="btn-nav" onclick="jumpTo()">이동</button>
+            <div style="width:1px; height:20px; background:var(--rule); flex-shrink:0; margin:0 2px;"></div>
+            <button class="btn-nav" onclick="forcePrev()">◀ 이전</button>
+            <button class="btn-nav" onclick="forceNext()">다음 ▶</button>
         </div>
-        <!-- 필사 모드 통계 -->
-        <div id="typing-stats" style="display:none; align-items:baseline; gap:8px; flex-shrink:0;">
-            <span class="tstat-item">오타<strong id="tstat-err">0</strong></span>
-            <span class="tstat-item">정확도 <strong id="tstat-acc">100</strong><span class="tstat-unit">%</span></span>
-            <span class="tstat-item"><span class="tstat-unit">CMP</span><strong id="tstat-cpm" style="font-size:1.4rem; line-height:1;">0</strong></span>
-            <button onclick="loadSampleBible()" title="개역개정 창세기 1장 샘플 불러오기" style="background:none;border:none;cursor:pointer;font-size:0.78rem;color:#d4776e;font-family:var(--font-main);padding:0 4px;font-weight:500;">▷ 샘플본문 click</button>
+        <!-- 2행: 필사 모드 통계 (필사 모드일 때만 표시) -->
+        <div class="nav-row nav-row-mode" id="nav-row-mode" style="display:none;">
+            <div id="typing-stats" style="display:flex; align-items:baseline; gap:10px; flex-shrink:0;">
+                <span class="tstat-item">오타 <strong id="tstat-err">0</strong></span>
+                <span class="tstat-item">정확도 <strong id="tstat-acc">100</strong><span class="tstat-unit">%</span></span>
+                <span class="tstat-item"><span class="tstat-unit">CMP</span> <strong id="tstat-cpm" style="font-size:1.3rem; line-height:1;">0</strong></span>
+            </div>
+        </div>
+        <!-- 숨겨진 라디오 (JS 호환용) -->
+        <div style="display:none;">
+            <input type="radio" name="typing-mode" value="strict" id="radio-strict">
+            <input type="radio" name="typing-mode" value="free" checked id="radio-free">
         </div>
     </div>
 
@@ -1185,7 +1204,7 @@
         </div>
 
         <div class="typing-frame">
-            <div id="reference-text" class="verse-box text-common" style="position:relative; background:#ffffff;">
+            <div id="reference-text" class="verse-box text-common" style="position:relative; background:#ffffff; box-sizing:border-box;">
                 <div class="ref-text-body">문장이 여기에 표시됩니다.</div>
                 <div class="ref-side-indicator"></div>
                 <div class="ref-side-menu" id="ref-side-menu" onclick="event.stopPropagation();">
@@ -1200,8 +1219,6 @@
             <div id="free-tools" style="display:flex; align-items:center; gap:5px; padding:6px 2px;">
                 <div style="flex:1;"></div>
                 <button class="btn-apply" onclick="applySameText()">본문 자동 채움</button>
-                <button class="btn-action" onclick="forcePrev()">이전 절</button>
-                <button class="btn-action" onclick="forceNext()">다음 절 (Enter)</button>
             </div>
             <!-- 날짜 위치: 상단 -->
             <div id="user-input" contenteditable="true"
@@ -1269,7 +1286,6 @@
                         </div>
                     </div>
                     <div class="fmt-divider"></div>
-                    <!-- 특수문자 입력기 -->
                     <div class="fmt-color-wrap" id="fmt-special-wrap">
                         <button class="fmt-btn" id="fmt-special-btn" onmousedown="event.preventDefault(); toggleSpecialPicker();" title="특수문자 삽입">특수</button>
                         <div class="special-picker-pop" id="special-picker-pop" style="display:none;">
@@ -1305,13 +1321,8 @@
                         </button>
                         <div class="color-picker-pop" id="color-picker-pop" style="display:none;"></div>
                     </div>
-                </div>
-                <div class="fmt-center">
                     <div class="fmt-divider"></div>
                     <button class="fmt-btn" id="fn-pipe-btn" title="각주 구분자 삽입  1) 히, '단어' | 2) 히, '단어'" style="font-family:var(--font-main); letter-spacing:0; color:#888; font-size:0.72rem; width:auto; padding:0 10px;">| 각주구분</button>
-                    <div class="fmt-divider"></div>
-                </div>
-                <div class="fmt-right">
                     <div class="fmt-divider"></div>
                     <button class="fmt-btn fmt-clear-btn" onclick="clearTagsFrom('user-input')" title="본문 태그 전체 삭제">
                         <span style="font-size:0.72rem;">본문태그↺</span>
@@ -1476,7 +1487,7 @@
     </div>
 
     <div id="ver-footer" style="text-align:right; font-size:0.72rem; color:#ccc; margin-top:18px; padding-top:10px; border-top:1px solid var(--rule); position:relative; z-index:1;">
-        <span id="ver-tag" style="cursor:default; user-select:none;">JINs Bible 2026 Web | v4.2.3</span>
+        <span id="ver-tag" style="cursor:default; user-select:none;">JINs Bible 2026 Web | v4.2.2</span>
     </div>
 
     <!-- 이스터에그 오버레이 -->
@@ -2866,7 +2877,7 @@ const SPECIAL_CATEGORIES = [
         const body  = refEl.querySelector('.ref-text-body');
         if (body) {
             body.classList.add('ref-empty');
-            body.innerHTML = '<button onclick="loadSampleBible()" style="display:inline-block;background:none;border:none;cursor:pointer;font-size:0.82rem;color:#d4776e;font-family:var(--font-main);padding:0;line-height:1.5;text-align:left;font-weight:500;" title="개역개정 창세기 1장 샘플 불러오기">▷ 샘플본문 click</button>';
+            body.innerHTML = '<button onclick="loadSampleBible()" style="display:inline-block;background:none;border:none;cursor:pointer;font-size:0.82rem;color:#d4776e;font-family:var(--font-main);padding:0;line-height:1.5;text-align:left;font-weight:500;" title="개역개정 창세기 1장 샘플 불러오기">▷ 샘플본문 click</button><span class="ref-empty-upload-hint">참고 성경역본<br>불러오기<br>(파일 드롭 가능)→</span>';
         }
         updateRefSideMenuLabel();
         // 헤더 타이틀 = 모드 이름 (라디오 라벨과 동일하게 통일)
@@ -2939,6 +2950,9 @@ const SPECIAL_CATEGORIES = [
         currentIndex = 0;
         fileNameBase = '샘플_개역한글';
 
+        // 현재 선택된 모드(필사/나만의) 유지
+        const currentMode = document.querySelector('input[name="typing-mode"]:checked')?.value || 'free';
+
         // freeWriteMode 해제 — 샘플은 파일 로드 모드와 동일하게 동작
         freeWriteMode = false;
         freeCurrentKey = '';
@@ -2965,9 +2979,12 @@ const SPECIAL_CATEGORIES = [
         const typingFrame = document.querySelector('.typing-frame');
         if (typingFrame) { typingFrame.classList.remove('free-write-active'); typingFrame.classList.add('strict-active'); typingFrame.classList.remove('strict-active'); }
 
-        // 나만의 성경역본 라디오를 free로 유지 (파일 로드 모드에서 기본값)
-        const freeRadio = document.querySelector('input[name="typing-mode"][value="free"]');
-        if (freeRadio) freeRadio.checked = true;
+        // 현재 모드 라디오 복원 (필사면 필사, 나만의면 나만의 유지)
+        const targetRadio = document.querySelector(`input[name="typing-mode"][value="${currentMode}"]`);
+        if (targetRadio) {
+            targetRadio.checked = true;
+            targetRadio.dispatchEvent(new Event('change'));
+        }
 
         document.getElementById('nav-bar').classList.add('visible');
         document.getElementById('action-grid').style.display = 'none';
@@ -2982,7 +2999,7 @@ const SPECIAL_CATEGORIES = [
         if (!notice) {
             notice = document.createElement('div');
             notice.id = 'sample-notice';
-            notice.style.cssText = 'position:absolute;bottom:6px;right:10px;font-size:0.62rem;color:#aaa;line-height:1.5;text-align:right;pointer-events:none;';
+            notice.style.cssText = 'position:absolute;bottom:6px;right:10px;font-size:0.62rem;color:#aaa;line-height:1.5;text-align:right;pointer-events:none;transition:right 0.25s ease;';
             notice.innerHTML = '샘플본문입니다.<br>창세기 1장 10절까지만 있습니다.';
             const refEl = document.getElementById('reference-text');
             if (refEl) refEl.appendChild(notice);
@@ -3544,7 +3561,7 @@ const SPECIAL_CATEGORIES = [
         const clean = buildSaveContent();
         const idx = typedData.findIndex(d => d.k === freeCurrentKey);
         if (idx !== -1) typedData[idx].t = clean;
-        else typedData.push({ k: freeCurrentKey, t: clean });
+        else typedData.push({ k: freeCurrentKey, t: clean, m: 'free' });
     }
 
     // ── 현재 절 입력 저장 (upsert) ───────────────────────────────────────
@@ -3556,7 +3573,7 @@ const SPECIAL_CATEGORIES = [
         const clean = buildSaveContent();
         const idx = typedData.findIndex(d => d.k === key);
         if (idx !== -1) typedData[idx].t = clean;
-        else typedData.push({ k: key, t: clean });
+        else typedData.push({ k: key, t: clean, m: 'free' });
     }
 
     // ── 다음 절 ──────────────────────────────────────────────────────────
@@ -3684,8 +3701,12 @@ const SPECIAL_CATEGORIES = [
             if (this.innerText.trim() === bibleData[currentIndex].text.trim()) {
                 this.classList.add('correct');
                 stopStatsTimer();
+                const inputEl = this;
                 setTimeout(() => {
-                    typedData.push({k: bibleData[currentIndex].title, t: buildSaveContent()});
+                    inputEl.blur();
+                    inputEl.innerHTML = '';
+                    document.getElementById('footnote-input').innerHTML = '';
+                    typedData.push({k: bibleData[currentIndex].title, t: buildSaveContent(), m: 'strict'});
                     loadVerse(currentIndex + 1);
                     refreshChartIfVisible();
                 }, 200);
@@ -3693,18 +3714,6 @@ const SPECIAL_CATEGORIES = [
                 autoSaveDebounced();
             }
         } else {
-            // 나만의 성경역본 모드: 참고 본문과 동일하면 다음 절 자동 이동
-            if (!freeWriteMode && bibleData.length && bibleData[currentIndex]) {
-                if (this.innerText.trim() === bibleData[currentIndex].text.trim()) {
-                    this.classList.add('correct');
-                    setTimeout(() => {
-                        saveCurrentVerse();
-                        loadVerse(currentIndex + 1);
-                        refreshChartIfVisible();
-                    }, 200);
-                    return;
-                }
-            }
             autoSaveDebounced();
         }
     };
@@ -3802,58 +3811,35 @@ const SPECIAL_CATEGORIES = [
         const checked = document.querySelector('input[name="typing-mode"]:checked');
         const isStrict = checked && checked.value === 'strict';
         showTypingStats(isStrict);
+
+        // 본문창·입력창 스크롤 동기화 (입력 중 정렬 유지)
+        const refEl = document.getElementById('reference-text');
+        const input = document.getElementById('user-input');
+        if (refEl && input && !input._scrollSyncBound) {
+            input._scrollSyncBound = true;
+            const sync = () => { refEl.scrollTop = input.scrollTop; };
+            input.addEventListener('scroll', sync);
+            input.addEventListener('input', sync);
+        }
     }
 
     function showTypingStats(show) {
+        // 2행(통계 행) 전체를 표시/숨김
+        const navRowMode = document.getElementById('nav-row-mode');
+        if (navRowMode) navRowMode.style.display = show ? 'flex' : 'none';
         const el = document.getElementById('typing-stats');
-        el.style.display = show ? 'flex' : 'none';
+        if (el) el.style.display = show ? 'flex' : 'none';
         const refEl = document.getElementById('reference-text');
         if (show) refEl.classList.add('strict-mode');
         else refEl.classList.remove('strict-mode');
         if (!show) stopStatsTimer();
 
-        // ref-text-body와 user-input에 완전히 동일한 값을 직접 적용
         const refBody = refEl.querySelector('.ref-text-body');
         const input   = document.getElementById('user-input');
-        const FONT_SIZE   = '1.6rem';
-        const LINE_HEIGHT = '1.7';
-        const PADDING     = '18px';
-        const WORD_BREAK  = 'break-all';
-        const WHITE_SPACE = 'pre-wrap';
-        const FONT_FAMILY = "var(--font-main)";
 
-        if (show) {
-            // 필사 모드: 폰트만 ref-text-body에 적용 (패딩은 역본 모드와 동일하게 유지)
-            if (refBody) {
-                refBody.style.fontSize   = FONT_SIZE;
-                refBody.style.lineHeight = LINE_HEIGHT;
-                refBody.style.wordBreak  = WORD_BREAK;
-                refBody.style.whiteSpace = WHITE_SPACE;
-                refBody.style.fontFamily = FONT_FAMILY;
-                refBody.style.color      = 'var(--ink)';
-            }
-            if (input) {
-                input.style.fontSize   = FONT_SIZE;
-                input.style.lineHeight = LINE_HEIGHT;
-                input.style.padding    = PADDING;
-                input.style.wordBreak  = WORD_BREAK;
-                input.style.whiteSpace = WHITE_SPACE;
-            }
-        } else {
-            // 나만의 성경역본: ref-text-body 인라인 초기화
-            if (refBody) {
-                refBody.style.fontSize = refBody.style.lineHeight =
-                refBody.style.wordBreak = refBody.style.whiteSpace = refBody.style.fontFamily =
-                refBody.style.color = '';
-            }
-            if (input) {
-                input.style.fontSize   = FONT_SIZE;
-                input.style.lineHeight = LINE_HEIGHT;
-                input.style.padding    = PADDING;
-                input.style.wordBreak  = WORD_BREAK;
-                input.style.whiteSpace = WHITE_SPACE;
-            }
-        }
+        // 인라인 스타일 모두 제거 — CSS가 전담
+        if (refBody) { refBody.style.cssText = ''; }
+        if (input)   { input.style.cssText = ''; }
 
         const typingFrame = document.querySelector('.typing-frame');
         if (typingFrame) {
@@ -3873,8 +3859,12 @@ const SPECIAL_CATEGORIES = [
         const btnHome    = document.getElementById('btn-home');
         const btnToInput = document.getElementById('btn-to-input');
         const title      = document.getElementById('verse-title');
+        // 현재 모드 감지
+        const isStrict = document.querySelector('input[name="typing-mode"]:checked')?.value === 'strict';
+        const chartMode = isStrict ? 'strict' : 'free';
+        const chartTitle = isStrict ? '디지털 필사 진행표' : '나만의 성경역본 진행표';
         if (chartVisible) {
-            buildChart();
+            buildChart(chartMode);
             chartView.style.display = 'block';
             chartView.style.height = 'calc(100vh - 160px)';
             chartView.style.overflowY = 'auto';
@@ -3899,7 +3889,7 @@ const SPECIAL_CATEGORIES = [
             });
             if (btnHome)    btnHome.style.display    = 'none';
             if (btnToInput) btnToInput.style.display = 'inline-flex';
-            if (title) { title.dataset.prev = title.innerText; title.innerText = 'JINs Bible 진행표'; }
+            if (title) { title.dataset.prev = title.innerText; title.innerText = chartTitle; }
         } else {
             chartView.style.display = 'none';
             chartView.style.height = '';
@@ -4505,7 +4495,7 @@ const SPECIAL_CATEGORIES = [
         panelBox.innerHTML = '';
 
         if (bibleDataSets.length === 0) {
-            tabBar.innerHTML = `<button class="com-ref-tab-add" onclick="triggerBibleSlotLoad()" style="font-weight:600; color:#5a5750; gap:5px; display:inline-flex; align-items:center;"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M6 1v7M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>본문 불러오기</button><button onclick="loadComSampleBible()" style="margin-left:auto; background:none; border:none; cursor:pointer; font-size:0.82rem; color:#d4776e; font-family:var(--font-main); padding:2px 4px; font-weight:500;" title="창1:1-3, 샘플 5개 역본 불러오기">▷ 샘플 본문보기(5개 역본) </button>`;
+            tabBar.innerHTML = `<button class="com-ref-tab-add" onclick="triggerBibleSlotLoad()" style="font-weight:600; color:#5a5750; gap:5px; display:inline-flex; align-items:center;"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="M6 1v7M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>본문 불러오기</button><button onclick="loadComSampleBible()" style="margin-left:auto; background:none; border:none; cursor:pointer; font-size:0.82rem; color:#d4776e; font-family:var(--font-main); padding:2px 4px; font-weight:500;" title="창세기 1장 샘플 5개 역본 불러오기">▷샘플 본문보기(5개 역본)</button>`;
             panelBox.innerHTML = `<div class="com-ref-panel no-bible">버튼을 클릭하거나 이 영역에 파일을 드래그&amp;드롭하세요 · TXT · BDB · AAB · ZIP 가능</div>`;
             return;
         }
@@ -5496,9 +5486,11 @@ const SPECIAL_CATEGORIES = [
 
     // ── Enter키로 다음 절 이동 (주석 모드에서는 비활성) ─────────────
 
-    function buildChart() {
+    function buildChart(mode) {
+        // mode: 'free' | 'strict' | undefined(전체)
+        const filteredData = mode ? typedData.filter(d => !d.m || d.m === mode) : typedData;
         const doneVerses = {};
-        typedData.forEach(d => {
+        filteredData.forEach(d => {
             const m = d.k.match(/^(.+?)\s+(\d+):(\d+)/);
             if (!m) return;
             const book = m[1].trim(), ch = parseInt(m[2]);
@@ -5591,7 +5583,10 @@ const SPECIAL_CATEGORIES = [
 
     // 차트가 열려있으면 타이핑/저장 후 자동 갱신
     function refreshChartIfVisible() {
-        if (chartVisible) buildChart();
+        if (chartVisible) {
+            const isStrict = document.querySelector('input[name="typing-mode"]:checked')?.value === 'strict';
+            buildChart(isStrict ? 'strict' : 'free');
+        }
     }
 </script>
     <script>
