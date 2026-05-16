@@ -1355,7 +1355,7 @@
                     <button class="fn-num-btn" onclick="insertFootnoteNum('³⁾')" title="각주 3번"><sup>3</sup>⁾</button>
                 </div>
                 <div style="flex:1;"></div>
-                <button id="btn-typo-check" class="btn-apply" onclick="toggleTypoCheck()" style="background:#5a7a6a; border-color:#5a7a6a;" disabled>오타 확인</button>
+                <button id="btn-typo-check" class="btn-apply" onclick="toggleTypoCheck()" style="background:#5a7a6a; border-color:#5a7a6a;" disabled>본문 대조</button>
                 <button id="btn-apply-text" class="btn-apply" onclick="applySameText()" disabled>본문 자동 채움</button>
             </div>
             <!-- 날짜 위치: 상단 -->
@@ -3063,7 +3063,7 @@ const SPECIAL_CATEGORIES = [
         if (_typoCheckActive) {
             // 확인 종료
             _typoCheckActive = false;
-            btn.textContent = '오타 확인';
+            btn.textContent = '본문 대조';
             btn.style.background = btn.style.borderColor = '#5a7a6a';
             const orig = refBody.dataset.origText
                 || (bibleData && bibleData[currentIndex] && bibleData[currentIndex].text)
@@ -3089,7 +3089,7 @@ const SPECIAL_CATEGORIES = [
             const original = refBody.dataset.origText;
             if (!original) return;
 
-            // 역본 모드 오타 확인: 단순 위치 비교 (각주 기호 제거 후)
+            // 역본 모드 본문 대조: 단순 위치 비교 (각주 기호 제거 후)
             // ▽ 없이 틀린 글자만 빨간색
             const parts = [];
             for (let i = 0; i < original.length; i++) {
@@ -3602,11 +3602,11 @@ const SPECIAL_CATEGORIES = [
             body.textContent = data.text;
             delete body.dataset.origText;
             _fnInText = false;  // 절 이동 시 각주 플래그 초기화
-            // 오타 확인 모드 닫기
+            // 본문 대조 모드 닫기
             if (_typoCheckActive) {
                 _typoCheckActive = false;
                 const typoBtn = document.getElementById('btn-typo-check');
-                if (typoBtn) { typoBtn.textContent = '오타 확인'; typoBtn.style.background = typoBtn.style.borderColor = '#5a7a6a'; }
+                if (typoBtn) { typoBtn.textContent = '본문 대조'; typoBtn.style.background = typoBtn.style.borderColor = '#5a7a6a'; }
                 }
             const refEl2 = document.getElementById('reference-text');
             const isStrict = refEl2.classList.contains('strict-mode');
@@ -4234,7 +4234,8 @@ const SPECIAL_CATEGORIES = [
         const checked = document.querySelector('input[name="typing-mode"]:checked');
         const isStrict = checked && checked.value === 'strict';
         // 모드에 따라 freeWriteMode 동기화
-        freeWriteMode = !isStrict;
+        // bibleData가 로드된 경우에는 free 라디오여도 freeWriteMode = false 유지
+        freeWriteMode = !isStrict && !bibleData.length;
         showTypingStats(isStrict);
 
         // 본문창·입력창 스크롤 동기화 (입력 중 정렬 유지)
