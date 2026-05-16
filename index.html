@@ -363,7 +363,7 @@
         .date-pos-btn.active, .btn-date-toggle.active { background:#edf3ef !important; color:#3a6b52 !important; border-color:#b5d0c0 !important; }
         #date-display { font-size:0.78rem; color:#aaa; font-style:italic; flex:1; }
         #footnote-input { display:block; border:none; outline:none; color:#444; background:#fffdf8; width:100%; padding:8px 14px 8px 28px; min-height:52px; height:80px; overflow-y:auto; font-family:'Georgia', 'Nanum Myeongjo', serif; font-size:calc(var(--font-size-text) * 0.62); line-height:1.75; word-break:break-all; white-space:pre-wrap; box-sizing:border-box; font-style:italic; }
-        #footnote-input:empty::before { content:attr(data-placeholder); color:#c0bdb6; pointer-events:none; font-style:normal; }
+        #footnote-input:empty::before { content:"1)각주 내용A\A 2)각주 내용B....이런 식으로 기술하세요."; color:#c0bdb6; pointer-events:none; font-style:normal; font-size:0.85em; white-space:pre; }
         .footnote-wrapper { position:relative; background:#fffdf8; }
         .footnote-wrapper::before { content:'†'; position:absolute; left:12px; top:9px; color:#aaa; font-size:calc(var(--font-size-text) * 0.58); font-family:'Georgia', serif; pointer-events:none; user-select:none; line-height:1; }
         #footnote-input:empty ~ .footnote-wrapper::before,
@@ -1401,7 +1401,7 @@
 
             <div class="footnote-wrapper">
                 <div id="footnote-input" contenteditable="true"
-                    data-placeholder="각주 내용을 입력하세요"
+                    data-placeholder="1)각주 내용A | 2)각주 내용B"
                     spellcheck="false"></div>
             </div>
 
@@ -1665,7 +1665,7 @@
     </div>
 
     <div id="ver-footer" style="text-align:right; font-size:0.72rem; color:#ccc; margin-top:18px; padding-top:10px; border-top:1px solid var(--rule); position:relative; z-index:1;">
-        <span id="ver-tag" style="cursor:default; user-select:none;">JINs Bible 2026 Web | v4.2.3</span>
+        <span id="ver-tag" style="cursor:default; user-select:none;">JINs Bible 2026 Web | v4.2.4</span>
     </div>
 
     <!-- 이스터에그 오버레이 -->
@@ -1811,6 +1811,14 @@
         activeEditor = 'main';
         setFootnoteToolbarMode(false);
     });
+    // 각주 입력창: Enter → <br> 강제 (div 생성 방지 → 저장/복원 일관성 유지)
+    document.getElementById('footnote-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.execCommand('insertLineBreak');
+        }
+    });
+
     document.getElementById('footnote-input').addEventListener('focus', () => {
         activeEditor = 'footnote';
         setFootnoteToolbarMode(true);
@@ -4235,13 +4243,49 @@ const SPECIAL_CATEGORIES = [
         const fmt = freeWriteMode ? 'txt' : document.getElementById('save-format').value;
         if (fmt === 'aab') {
             try {
+                // JINs 내부 저장 포맷 → AAB btext 포맷 변환
+                // 내부: 본문<br>▷1) 히, ... | 2) 얻음  (파이프 구분)
+                //    또는 본문<br>▷1) 히, ...<br>2) 얻음  (엔터 구분)
+                // AAB:  본문 【1) 히, ...】 【2) 얻음】  ← import_service.dart 가 파싱
+                function toAABText(saved) {
+                    const fnIdx = saved.indexOf('<br>▷');
+                    let mainPart = fnIdx !== -1 ? saved.slice(0, fnIdx) : saved;
+                    let fnPart   = fnIdx !== -1 ? saved.slice(fnIdx + 5) : '';
+                    // 내부 서식 태그 제거 (구조 태그 <...> <J>...</J> <b> 등은 유지)
+                    const strip = s => s
+                        .replace(/<font color='[^']*'>([\s\S]*?)<\/font>/g, '$1')
+                        .replace(/\[#[^\]]+\]/g, '')
+                        .replace(/\[\/#[^\]]+\]/g, '');
+                    mainPart = strip(mainPart).replace(/\n/g, ' ').trim();
+                    if (!fnPart.trim()) return mainPart;
+                    // 날짜 스탬프 제거
+                    fnPart = strip(fnPart)
+                        .replace(/\d{4}\.\d{2}\.\d{2}/g, '')
+                        .trim();
+                    // 구분자 감지: ① 파이프(|) ② <br> (엔터 입력) 순으로 분리
+                    let items;
+                    if (fnPart.includes('|')) {
+                        // 파이프 분리 — 각 항목 내 <br>은 공백으로
+                        items = fnPart.split(/\s*\|\s*/)
+                            .map(s => s.replace(/<br\s*\/?>/gi, ' ').trim());
+                    } else {
+                        // <br> 분리 (사용자가 Enter로 각주 구분한 경우)
+                        items = fnPart.split(/<br\s*\/?>/gi)
+                            .map(s => s.trim());
+                    }
+                    const blocks = items
+                        .filter(s => s && !/^\d{4}\.\d{2}\.\d{2}$/.test(s))
+                        .map(s => `【${s}】`);
+                    return mainPart + (blocks.length ? ' ' + blocks.join(' ') : '');
+                }
+
                 const SQL = await initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}` });
                 const db = new SQL.Database();
                 db.run("CREATE TABLE Bible (book INTEGER, chapter INTEGER, verse INTEGER, btext TEXT)");
                 const stmt = db.prepare("INSERT INTO Bible VALUES (?, ?, ?, ?)");
                 typedData.forEach(d => {
                     const m = d.k.match(/^(.+?)\s+(\d+):(\d+)/);
-                    if (m) { const raw = m[1].trim(); const bIdx = BOOK_NUM.indexOf(ABBR_ALIAS[raw] || raw); if (bIdx > 0) stmt.run([bIdx, parseInt(m[2]), parseInt(m[3]), d.t]); }
+                    if (m) { const raw = m[1].trim(); const bIdx = BOOK_NUM.indexOf(ABBR_ALIAS[raw] || raw); if (bIdx > 0) stmt.run([bIdx, parseInt(m[2]), parseInt(m[3]), toAABText(d.t)]); }
                 });
                 stmt.free();
                 const res = new Uint8Array(8 + db.export().length);
